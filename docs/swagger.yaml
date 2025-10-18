@@ -1,0 +1,2523 @@
+basePath: /v1
+definitions:
+  dto.Appointment:
+    properties:
+      appointment_date:
+        description: AppointmentDate is the date of the appointment (without time)
+        type: string
+      created_at:
+        description: CreatedAt is the time when the appointment was created
+        type: string
+      deleted_at:
+        description: DeletedAt is the time when the appointment was soft deleted
+        type: string
+      id:
+        description: ID is the unique identifier of the appointment
+        type: string
+      notes:
+        description: Notes contains additional notes about the appointment
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/dto.AppointmentStatus'
+        description: Status is the current status of the appointment
+      updated_at:
+        description: UpdatedAt is the time when the appointment was last updated
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/dto.User'
+        description: User contains the user information (populated when needed)
+      user_id:
+        description: UserID is the ID of the user who booked the appointment
+        type: string
+    type: object
+  dto.AppointmentListResponse:
+    properties:
+      appointments:
+        items:
+          $ref: '#/definitions/dto.Appointment'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.AppointmentStatsResponse:
+    properties:
+      cancelled_appointments:
+        type: integer
+      completed_appointments:
+        type: integer
+      pending_appointments:
+        type: integer
+      total_appointments:
+        type: integer
+    type: object
+  dto.AppointmentStatus:
+    enum:
+    - pending
+    - completed
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - AppointmentStatusPending
+    - AppointmentStatusCompleted
+    - AppointmentStatusCancelled
+  dto.AuthResponse:
+    properties:
+      access_token:
+        description: AccessToken is the JWT access token
+        type: string
+      expires_in:
+        description: ExpiresIn is the token expiration time in seconds
+        type: integer
+      refresh_token:
+        description: RefreshToken is the JWT refresh token
+        type: string
+      token_type:
+        description: TokenType is the type of token (Bearer)
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/dto.User'
+        description: User is the authenticated user information
+    type: object
+  dto.AvailableDate:
+    properties:
+      available_spots:
+        description: AvailableSpots is the number of available spots (calculated field)
+        type: integer
+      created_at:
+        description: CreatedAt is the time when the available date was created
+        type: string
+      current_bookings:
+        description: CurrentBookings is the current number of booked appointments
+        type: integer
+      id:
+        description: ID is the unique identifier of the available date
+        type: string
+      is_active:
+        description: IsActive indicates if this date is active for booking
+        type: boolean
+      max_capacity:
+        description: MaxCapacity is the maximum number of appointments allowed on
+          this date
+        type: integer
+      slot_date:
+        description: SlotDate is the date available for appointments
+        type: string
+      updated_at:
+        description: UpdatedAt is the time when the available date was last updated
+        type: string
+    type: object
+  dto.ChangePasswordRequest:
+    properties:
+      current_password:
+        description: CurrentPassword is the user's current password for verification
+        type: string
+      new_password:
+        description: NewPassword is the new password the user wants to set
+        type: string
+    type: object
+  dto.Communion:
+    properties:
+      approved_at:
+        description: ApprovedAt is the time when the communion was approved (if applicable)
+        type: string
+      approved_by:
+        allOf:
+        - $ref: '#/definitions/dto.User'
+        description: ApprovedBy contains the admin user information (populated when
+          needed)
+      approved_by_user_id:
+        description: ApprovedByUserID is the ID of the admin who approved the communion
+        type: string
+      communion_date:
+        description: CommunionDate is the requested communion date (must be in the
+          past)
+        type: string
+      created_at:
+        description: CreatedAt is the time when the communion record was created
+        type: string
+      deleted_at:
+        description: DeletedAt is the time when the communion record was soft deleted
+        type: string
+      id:
+        description: ID is the unique identifier of the communion request
+        type: string
+      requested_at:
+        description: RequestedAt is the time when the communion was requested
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/dto.CommunionStatus'
+        description: Status is the current status of the communion request
+      updated_at:
+        description: UpdatedAt is the time when the communion record was last updated
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/dto.User'
+        description: User contains the user information (populated when needed)
+      user_id:
+        description: UserID is the ID of the user who made the communion request
+        type: string
+    type: object
+  dto.CommunionListResponse:
+    properties:
+      communions:
+        items:
+          $ref: '#/definitions/dto.Communion'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.CommunionStatus:
+    enum:
+    - pending
+    - approved
+    - rejected
+    type: string
+    x-enum-varnames:
+    - CommunionStatusPending
+    - CommunionStatusApproved
+    - CommunionStatusRejected
+  dto.CreateAppointmentRequest:
+    properties:
+      appointment_date:
+        description: 'AppointmentDate is the desired date for the appointment (format:
+          YYYY-MM-DD)'
+        type: string
+      notes:
+        description: Notes contains optional notes about the appointment
+        type: string
+    type: object
+  dto.CreateAvailableDate:
+    properties:
+      is_active:
+        description: IsActive indicates if this date should be active immediately
+          (defaults to true)
+        type: boolean
+      max_capacity:
+        description: MaxCapacity is the maximum number of appointments allowed on
+          this date (defaults to 10)
+        type: integer
+      slot_date:
+        allOf:
+        - $ref: '#/definitions/dto.Date'
+        description: SlotDate is the date to make available for appointments
+    type: object
+  dto.CreateCommunionRequest:
+    properties:
+      communion_date:
+        description: 'CommunionDate is the desired communion date (format: YYYY-MM-DD)
+          - must be in the past'
+        type: string
+    type: object
+  dto.CreateQuestion:
+    properties:
+      question:
+        description: Question is the text of the question
+        type: string
+    type: object
+  dto.Date:
+    properties:
+      time.Time:
+        type: string
+    type: object
+  dto.ForgotPasswordRequest:
+    properties:
+      phone_number:
+        description: PhoneNumber is the Ethiopian phone number of the user
+        type: string
+    type: object
+  dto.ForgotPasswordResponse:
+    properties:
+      message:
+        description: Message is a generic success message (doesn't reveal if user
+          exists)
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        description: Password is the user's password
+        type: string
+      phone_number:
+        description: PhoneNumber is the Ethiopian phone number (+251...)
+        type: string
+    type: object
+  dto.MarkAppointmentCompletedRequest:
+    properties:
+      notes:
+        description: Notes contains optional completion notes
+        type: string
+    type: object
+  dto.Question:
+    properties:
+      admin_response:
+        description: AdminResponse is the admin's response to the question
+        type: string
+      created_at:
+        description: CreatedAt is the time when the question was created
+        type: string
+      id:
+        description: ID is the unique identifier of the question
+        type: string
+      question:
+        description: Question is the text of the question
+        type: string
+      responded_by:
+        description: RespondedBy is the ID of the admin who responded
+        type: string
+      responder_name:
+        description: ResponderName is the name of the admin who responded (populated
+          in some queries)
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/dto.QuestionStatus'
+        description: Status is the current status of the question
+      updated_at:
+        description: UpdatedAt is the time when the question was last updated
+        type: string
+      user_id:
+        description: UserID is the ID of the user who submitted the question
+        type: string
+      user_name:
+        description: UserName is the name of the user who submitted the question (populated
+          in some queries)
+        type: string
+    type: object
+  dto.QuestionStats:
+    properties:
+      answered:
+        type: integer
+      cancelled:
+        type: integer
+      closed:
+        type: integer
+      pending:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.QuestionStatus:
+    enum:
+    - pending
+    - answered
+    - closed
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - QuestionStatusPending
+    - QuestionStatusAnswered
+    - QuestionStatusClosed
+    - QuestionStatusCancelled
+  dto.QuestionsListResponse:
+    properties:
+      has_more:
+        type: boolean
+      page:
+        type: integer
+      page_size:
+        type: integer
+      questions:
+        items:
+          $ref: '#/definitions/dto.Question'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        description: RefreshToken is the JWT refresh token
+        type: string
+    type: object
+  dto.RegisterUser:
+    properties:
+      lastname:
+        description: LastName is the last name of the user.
+        type: string
+      name:
+        description: Name is the first name of the user.
+        type: string
+      password:
+        description: Password is the user's password.
+        type: string
+      phone_number:
+        description: PhoneNumber is the Ethiopian phone number (+251...).
+        type: string
+      role:
+        description: Role is the user's role (admin, manager, user) - defaults to
+          'user'
+        type: string
+      telegram_id:
+        description: TelegramID is the optional Telegram ID of the user.
+        type: string
+    type: object
+  dto.ResetPasswordRequest:
+    properties:
+      new_password:
+        description: NewPassword is the new password to set
+        type: string
+      token:
+        description: Token is the password reset token
+        type: string
+    type: object
+  dto.ResetPasswordResponse:
+    properties:
+      message:
+        description: Message is the success message
+        type: string
+    type: object
+  dto.TelegramLinkRequest:
+    properties:
+      phone_number:
+        description: PhoneNumber is the user's phone number
+        type: string
+    type: object
+  dto.TelegramLinkResponse:
+    properties:
+      link_code:
+        description: LinkCode is the one-time code for linking Telegram account
+        type: string
+      message:
+        description: Message provides instructions to the user
+        type: string
+      telegram_url:
+        description: TelegramURL is the deep link URL to open in Telegram
+        type: string
+    type: object
+  dto.UpdateAppointmentRequest:
+    properties:
+      appointment_date:
+        description: 'AppointmentDate is the new date for the appointment (format:
+          YYYY-MM-DD)'
+        type: string
+      notes:
+        description: Notes contains optional notes about the appointment
+        type: string
+    type: object
+  dto.UpdateAvailableDate:
+    properties:
+      is_active:
+        description: IsActive indicates if this date should be active for booking
+        type: boolean
+      max_capacity:
+        description: MaxCapacity is the maximum number of appointments allowed on
+          this date
+        type: integer
+    type: object
+  dto.UpdateCommunionStatusRequest:
+    properties:
+      status:
+        description: Status is the new status for the communion request
+        type: string
+    type: object
+  dto.UpdateQuestion:
+    properties:
+      admin_response:
+        description: AdminResponse is the admin's response to the question (admin
+          only)
+        type: string
+      question:
+        description: Question is the new text of the question (only for users updating
+          their own questions)
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/dto.QuestionStatus'
+        description: Status is the new status of the question (admin only)
+    type: object
+  dto.UpdateUser:
+    properties:
+      childrens_name:
+        description: ChildrensName is a list of children's names
+        items:
+          type: string
+        type: array
+      education:
+        description: Education is the user's education background
+        type: string
+      job_title:
+        description: JobTitle is the user's job title
+        type: string
+      lastname:
+        description: LastName is the last name of the user.
+        type: string
+      marriage_status:
+        description: MarriageStatus is the user's marriage status (single, married,
+          divorced, widowed)
+        type: string
+      name:
+        description: Name is the first name of the user.
+        type: string
+      partner_name:
+        description: PartnerName is the name of the user's partner (spouse)
+        type: string
+      phone_number:
+        description: PhoneNumber is the Ethiopian phone number of the user.
+        type: string
+      telegram_id:
+        description: TelegramID is the optional Telegram ID of the user.
+        type: string
+    type: object
+  dto.User:
+    properties:
+      childrens_name:
+        description: ChildrensName is a list of children's names
+        items:
+          type: string
+        type: array
+      created_at:
+        description: |-
+          CreatedAt is the time when the user is created.
+          It is automatically set when the user is created.
+        type: string
+      deleted_at:
+        description: DeletedAt is the time the user was deleted.
+        type: string
+      education:
+        description: Education is the user's education background
+        type: string
+      id:
+        description: |-
+          ID is the unique identifier of the user.
+          It is automatically generated when the user is created.
+        type: string
+      job_title:
+        description: JobTitle is the user's job title
+        type: string
+      lastname:
+        description: LastName is the last name of the user.
+        type: string
+      marriage_status:
+        description: MarriageStatus is the user's marriage status
+        type: string
+      name:
+        description: Name is the first name of the user.
+        type: string
+      partner_name:
+        description: PartnerName is the name of the user's partner (spouse)
+        type: string
+      phone_number:
+        description: PhoneNumber is the Ethiopian phone number of the user.
+        type: string
+      role:
+        description: Role is the user's role (admin, manager, user)
+        type: string
+      status:
+        description: Status is the user's account status (PENDING, ACTIVE, INACTIVE)
+        type: string
+      telegram_id:
+        description: TelegramID is the optional Telegram ID of the user.
+        type: string
+      updated_at:
+        description: UpdatedAt is the time the user was last updated.
+        type: string
+    type: object
+  dto.UserListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/dto.User'
+        type: array
+    type: object
+  dto.UserStatusUpdateRequest:
+    properties:
+      status:
+        description: Status is the new status to set (ACTIVE, INACTIVE)
+        type: string
+    type: object
+  model.ErrorResponse:
+    properties:
+      code:
+        description: Code is the error code. It is not status code
+        type: integer
+      description:
+        description: Description is the error description.
+        type: string
+      field_error:
+        description: FieldError is the error detail for each field, if available that
+          is.
+        items:
+          $ref: '#/definitions/model.FieldError'
+        type: array
+      message:
+        description: Message is the error message.
+        type: string
+      stack_trace:
+        description: |-
+          StackTrace is the stack trace of the error.
+          It is only returned for debugging
+        type: string
+    type: object
+  model.FieldError:
+    properties:
+      description:
+        description: Description is the error description for this field.
+        type: string
+      name:
+        description: Name is the name of the field that caused the error.
+        type: string
+    type: object
+  model.MetaData:
+    properties:
+      extra:
+        description: Extra contains other response specific data
+      page:
+        description: Page  is used to identify the starting point to return rows from
+          a result set
+        type: integer
+      per_page:
+        description: PerPage is the number of records to return after filtering
+        type: integer
+      sort:
+        description: Sort is used to sort the result set in ascending or descending
+          order
+        type: string
+      total:
+        description: Total is the total number of data without pagination
+        type: integer
+    type: object
+  model.Response:
+    properties:
+      data:
+        description: Data contains the actual data of the response.
+      error:
+        allOf:
+        - $ref: '#/definitions/model.ErrorResponse'
+        description: Error contains the error detail if the request was not successful.
+      meta_data:
+        allOf:
+        - $ref: '#/definitions/model.MetaData'
+        description: MetaData contains additional data like filtering, pagination,
+          etc.
+      ok:
+        description: OK is only true if the request was successful.
+        type: boolean
+    type: object
+  model.SuccessResponse:
+    properties:
+      data:
+        description: Data contains the response data
+      meta_data:
+        allOf:
+        - $ref: '#/definitions/model.MetaData'
+        description: MetaData contains pagination or other metadata
+      ok:
+        description: OK is always true for successful responses
+        example: true
+        type: boolean
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: A comprehensive authentication API supporting Ethiopian phone numbers
+    with JWT-based security
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Kesis Ethiopian Phone Authentication API
+  version: "1.0"
+paths:
+  /appointments:
+    get:
+      description: Retrieve all appointments with pagination. Requires admin or manager
+        role.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved all appointments
+          schema:
+            $ref: '#/definitions/dto.AppointmentListResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all appointments
+      tags:
+      - Appointments
+    post:
+      consumes:
+      - application/json
+      description: Create a new appointment for the authenticated user. Users can
+        only have one active appointment at a time. Appointments are only available
+        on Monday, Wednesday, and Friday. Maximum 10 appointments per day.
+      parameters:
+      - description: Appointment details
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created appointment
+          schema:
+            $ref: '#/definitions/dto.Appointment'
+        "400":
+          description: Bad request - validation errors, user already has active appointment,
+            or date at capacity
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create appointment
+      tags:
+      - Appointments
+  /appointments/{id}:
+    delete:
+      description: Delete an appointment permanently. Only admin can perform this
+        action.
+      parameters:
+      - description: Appointment ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted appointment
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad request - invalid appointment ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete appointment
+      tags:
+      - Appointments
+    get:
+      description: Retrieve appointment details by ID. Users can only access their
+        own appointments unless they are admin/manager.
+      parameters:
+      - description: Appointment ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved appointment
+          schema:
+            $ref: '#/definitions/dto.Appointment'
+        "400":
+          description: Bad request - invalid appointment ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - cannot access this appointment
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get appointment by ID
+      tags:
+      - Appointments
+    patch:
+      consumes:
+      - application/json
+      description: Update appointment details. Users can only update their own appointments
+        and cannot update past, completed, or cancelled appointments.
+      parameters:
+      - description: Appointment ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated appointment details
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated appointment
+          schema:
+            $ref: '#/definitions/dto.Appointment'
+        "400":
+          description: Bad request - validation errors or invalid state
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - cannot update this appointment
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update appointment
+      tags:
+      - Appointments
+  /appointments/{id}/cancel:
+    post:
+      description: Cancel an appointment. Users can only cancel their own appointments
+        unless they are admin/manager.
+      parameters:
+      - description: Appointment ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully cancelled appointment
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad request - invalid ID or appointment state
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - cannot cancel this appointment
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel appointment
+      tags:
+      - Appointments
+  /appointments/{id}/complete:
+    post:
+      consumes:
+      - application/json
+      description: Mark an appointment as completed with optional notes. Only admin
+        and manager can perform this action.
+      parameters:
+      - description: Appointment ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Completion details
+        in: body
+        name: completion
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MarkAppointmentCompletedRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully marked appointment as completed
+          schema:
+            $ref: '#/definitions/dto.Appointment'
+        "400":
+          description: Bad request - invalid ID or appointment state
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark appointment as completed
+      tags:
+      - Appointments
+  /appointments/available-dates:
+    get:
+      description: Retrieve available appointment dates within a specified date range.
+        Only shows dates that are not at maximum capacity (10 appointments).
+      parameters:
+      - description: 'Start date (YYYY-MM-DD, default: today)'
+        in: query
+        name: start_date
+        type: string
+      - description: 'End date (YYYY-MM-DD, default: 1 month from today)'
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved available dates
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad request - invalid date format
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get available appointment dates
+      tags:
+      - Appointments
+  /appointments/my:
+    get:
+      description: Retrieve appointments for the authenticated user with pagination.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved user appointments
+          schema:
+            $ref: '#/definitions/dto.AppointmentListResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user appointments
+      tags:
+      - Appointments
+  /appointments/stats:
+    get:
+      description: Retrieve appointment statistics including total, pending, completed,
+        and cancelled counts. Requires admin or manager role.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved appointment statistics
+          schema:
+            $ref: '#/definitions/dto.AppointmentStatsResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get appointment statistics
+      tags:
+      - Appointments
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change the authenticated user's password. Requires the current
+        password for verification.
+      parameters:
+      - description: Current and new password details
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully changed password
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad request - validation errors or incorrect current password
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change user password
+      tags:
+      - Authentication
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiate password reset process. A reset link will be sent to the
+        user's linked Telegram account if it exists
+      parameters:
+      - description: Forgot password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message (always returned regardless of user existence)
+          schema:
+            $ref: '#/definitions/dto.ForgotPasswordResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - Authentication
+  /auth/link-telegram:
+    post:
+      consumes:
+      - application/json
+      description: Generate a temporary link code to connect user's Telegram account
+      parameters:
+      - description: Telegram link request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TelegramLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Link code and Telegram URL generated
+          schema:
+            $ref: '#/definitions/dto.TelegramLinkResponse'
+        "400":
+          description: User not found or validation error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Generate Telegram link code
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 'Authenticate with Ethiopian phone number and password. Returns
+        JWT access and refresh tokens. Supports multiple phone formats: +251912345678,
+        0912345678, or 912345678.'
+      parameters:
+      - description: Login credentials (phone number + password)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated - returns access token (15min) and
+            refresh token (7 days)
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad request - validation errors
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid phone number or password
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Login with Ethiopian phone number
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate a new access token using a valid refresh token. The refresh
+        token remains valid for its full 7-day lifetime.
+      parameters:
+      - description: Refresh token request
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully refreshed - returns new access token (15min) with
+            same refresh token
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad request - missing or malformed refresh token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 'Register a new user with Ethiopian phone number. Supports multiple
+        formats: +251912345678, 0912345678, or 912345678. Phone numbers are automatically
+        normalized to E.164 format. Users default to ''user'' role.'
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created user
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad request - validation errors or duplicate phone number
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+  /auth/reset:
+    get:
+      description: Display HTML form for password reset (GET endpoint for reset links
+        from Telegram)
+      parameters:
+      - description: Password reset token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML password reset form
+          schema:
+            type: string
+        "400":
+          description: Invalid or expired token
+          schema:
+            type: string
+      summary: Show password reset form
+      tags:
+      - Authentication
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password using a valid reset token
+      parameters:
+      - description: Reset password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successful
+          schema:
+            $ref: '#/definitions/dto.ResetPasswordResponse'
+        "400":
+          description: Invalid token or validation error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Complete password reset
+      tags:
+      - Authentication
+  /available-dates:
+    get:
+      description: Get available dates within a date range for booking appointments.
+        Admin/managers can include inactive dates.
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: 'Include inactive dates (default: false, admin/manager only)'
+        in: query
+        name: include_inactive
+        type: boolean
+      - description: 'Only return dates with available capacity (default: false)'
+        in: query
+        name: only_available
+        type: boolean
+      responses:
+        "200":
+          description: Successfully retrieved available dates
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.AvailableDate'
+                  type: array
+              type: object
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get available dates
+      tags:
+      - available-dates
+    post:
+      consumes:
+      - application/json
+      description: Create a new available date for appointments. Admins and managers
+        can add availability dates beyond the default Monday/Wednesday/Friday schedule.
+      parameters:
+      - description: Create available date request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAvailableDate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created available date
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AvailableDate'
+              type: object
+        "400":
+          description: Bad request - validation errors (invalid date, capacity, etc.)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "409":
+          description: Conflict - available date already exists for this date
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new available date (Admin/Manager)
+      tags:
+      - available-dates
+  /available-dates/{date}:
+    delete:
+      description: Delete an available date. Cannot delete dates with active appointments.
+      parameters:
+      - description: Date (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully deleted available date
+          schema:
+            $ref: '#/definitions/model.Response'
+        "400":
+          description: Bad request - cannot delete date with active bookings
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Available date not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete available date (Admin/Manager)
+      tags:
+      - available-dates
+    get:
+      description: Get a specific available date by its date
+      parameters:
+      - description: Date (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully retrieved available date
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AvailableDate'
+              type: object
+        "400":
+          description: Bad request - invalid date format
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Available date not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get available date by date
+      tags:
+      - available-dates
+    put:
+      consumes:
+      - application/json
+      description: Update an existing available date's capacity or active status
+      parameters:
+      - description: Date (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: Update available date request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateAvailableDate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated available date
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AvailableDate'
+              type: object
+        "400":
+          description: Bad request - validation errors or cannot reduce capacity below
+            current bookings
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Available date not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update available date (Admin/Manager)
+      tags:
+      - available-dates
+  /communion:
+    post:
+      consumes:
+      - application/json
+      description: 'Create a new communion request for the authenticated user. The
+        communion date must be in the past (format: YYYY-MM-DD). Users can create
+        multiple communion requests.'
+      parameters:
+      - description: Communion request details
+        in: body
+        name: communion
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCommunionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created communion request
+          schema:
+            $ref: '#/definitions/dto.Communion'
+        "400":
+          description: Bad request - validation errors (invalid date format, future
+            date, etc.)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create communion request
+      tags:
+      - Communion
+  /communion/{id}:
+    delete:
+      description: Soft delete a communion request by ID. Requires 'communions:delete'
+        permission (admin role only).
+      parameters:
+      - description: Communion ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted the communion request
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad request - invalid communion ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Communion request not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete communion request
+      tags:
+      - Communion
+    get:
+      description: Retrieve communion request information by ID. Users can view their
+        own requests, admins can view any communion request.
+      parameters:
+      - description: Communion ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved communion request
+          schema:
+            $ref: '#/definitions/dto.Communion'
+        "400":
+          description: Bad request - invalid communion ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - can only access own requests unless admin
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Communion request not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get communion request by ID
+      tags:
+      - Communion
+    patch:
+      consumes:
+      - application/json
+      description: Update a communion request. Users can only update their own pending
+        requests. Only the communion date can be updated.
+      parameters:
+      - description: Communion ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated communion request details
+        in: body
+        name: communion
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCommunionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated communion request
+          schema:
+            $ref: '#/definitions/dto.Communion'
+        "400":
+          description: Bad request - validation errors (invalid date, non-pending
+            request, etc.)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - can only update own pending requests
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Communion request not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update communion request
+      tags:
+      - Communion
+  /communion/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a communion request to approved or rejected.
+        Requires 'communions:manage' permission (admin role only). Only pending requests
+        can have their status updated.
+      parameters:
+      - description: Communion ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update details (approved/rejected)
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCommunionStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated communion status
+          schema:
+            $ref: '#/definitions/dto.Communion'
+        "400":
+          description: Bad request - validation errors (invalid status, non-pending
+            request, etc.)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions (requires admin role)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Communion request not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update communion request status
+      tags:
+      - Communion
+  /communion/all:
+    get:
+      description: Retrieve a paginated list of all communion requests. Requires 'communions:list'
+        permission (admin role only).
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved all communion requests
+          schema:
+            $ref: '#/definitions/dto.CommunionListResponse'
+        "400":
+          description: Bad request - invalid pagination parameters
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions (requires admin role)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all communion requests
+      tags:
+      - Communion
+  /communion/pending:
+    get:
+      description: Retrieve a paginated list of pending communion requests that require
+        approval. Requires 'communions:manage' permission (admin role only).
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved pending communion requests
+          schema:
+            $ref: '#/definitions/dto.CommunionListResponse'
+        "400":
+          description: Bad request - invalid pagination parameters
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions (requires admin role)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get pending communion requests
+      tags:
+      - Communion
+  /communion/user:
+    get:
+      description: Retrieve a paginated list of communion requests for the authenticated
+        user.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Number of items per page (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved user communion requests
+          schema:
+            $ref: '#/definitions/dto.CommunionListResponse'
+        "400":
+          description: Bad request - invalid pagination parameters
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's communion requests
+      tags:
+      - Communion
+  /questions:
+    get:
+      description: Get questions with filtering and pagination for admin/manager use
+      parameters:
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: string
+      - description: Filter by status (pending, answered, closed, cancelled)
+        in: query
+        name: status
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      - description: 'Include user names in response (default: false)'
+        in: query
+        name: include_user_names
+        type: boolean
+      responses:
+        "200":
+          description: Successfully retrieved questions
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuestionsListResponse'
+              type: object
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get questions (Admin/Manager)
+      tags:
+      - questions
+    post:
+      consumes:
+      - application/json
+      description: Create a new question for the authenticated user
+      parameters:
+      - description: Create question request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateQuestion'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created question
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Question'
+              type: object
+        "400":
+          description: Bad request - validation errors or maximum pending questions
+            reached
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new question
+      tags:
+      - questions
+  /questions/{id}:
+    delete:
+      description: Delete a question permanently
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully deleted question
+          schema:
+            $ref: '#/definitions/model.Response'
+        "400":
+          description: Bad request - invalid question ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete question (Admin/Manager)
+      tags:
+      - questions
+    get:
+      description: Get a specific question by ID for admin/manager use
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully retrieved question
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Question'
+              type: object
+        "400":
+          description: Bad request - invalid question ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get question by ID (Admin/Manager)
+      tags:
+      - questions
+  /questions/{id}/respond:
+    post:
+      consumes:
+      - application/json
+      description: Respond to a pending question with admin response
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Response request (admin_response field required)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateQuestion'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully responded to question
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Question'
+              type: object
+        "400":
+          description: Bad request - validation errors or question not pending
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Respond to question (Admin/Manager)
+      tags:
+      - questions
+  /questions/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update a question's status
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            status:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated question status
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Question'
+              type: object
+        "400":
+          description: Bad request - invalid status
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update question status (Admin/Manager)
+      tags:
+      - questions
+  /questions/my:
+    get:
+      description: Get all questions for the authenticated user
+      responses:
+        "200":
+          description: Successfully retrieved questions
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.Question'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my questions
+      tags:
+      - questions
+  /questions/my/{id}:
+    delete:
+      description: Delete a user's own pending question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully deleted question
+          schema:
+            $ref: '#/definitions/model.Response'
+        "400":
+          description: Bad request - invalid question ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - cannot delete non-pending questions
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete my question
+      tags:
+      - questions
+    put:
+      consumes:
+      - application/json
+      description: Update a user's own pending question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update question request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateQuestion'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated question
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.Question'
+              type: object
+        "400":
+          description: Bad request - validation errors or invalid question ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - cannot update non-pending questions
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Question not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update my question
+      tags:
+      - questions
+  /questions/my/stats:
+    get:
+      description: Get question statistics for the authenticated user
+      responses:
+        "200":
+          description: Successfully retrieved statistics
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuestionStats'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my question statistics
+      tags:
+      - questions
+  /questions/stats:
+    get:
+      description: Get overall question statistics for admin/manager dashboard
+      responses:
+        "200":
+          description: Successfully retrieved statistics
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuestionStats'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get question statistics (Admin/Manager)
+      tags:
+      - questions
+  /users:
+    get:
+      description: Retrieve a list of all registered users with pagination. Requires
+        authentication and 'users:list' permission. Only admins and managers can access
+        this endpoint.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 20, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved users
+          schema:
+            $ref: '#/definitions/dto.UserListResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions (requires admin or manager
+            role)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      description: Soft delete a user by ID. Requires 'users:delete' permission (admin
+        role only).
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted the user
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad request - invalid user ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      description: 'Retrieve user information by user ID. Users can read their own
+        profile, admins and managers can read any user. Note: when users view their
+        own profile, the role field is omitted from the response.'
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved user
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad request - invalid user ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - can only access own profile unless admin/manager
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Update user profile information including name, lastname, phone_number,
+        job_title, education, marriage_status, childrens_name, and telegram_id. Users
+        can update their own profile, admins/managers can update any user. All fields
+        are optional - only provided fields will be updated.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated user profile details (all fields optional)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated user profile
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad request - validation errors (invalid phone, marriage_status,
+            etc.)
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - can only update own profile unless admin/manager
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - Users
+  /users/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update a user's account status. Used by admins/managers to approve
+        or reject pending user registrations. Status can be ACTIVE (approved) or INACTIVE
+        (rejected). When users register, they start with PENDING status and cannot
+        login until approved.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status details (ACTIVE or INACTIVE)
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserStatusUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated user status
+          schema:
+            $ref: '#/definitions/dto.User'
+        "400":
+          description: Bad request - validation errors or invalid user ID
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden - requires admin or manager role
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user status
+      tags:
+      - Users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter the token with the `Bearer: ` prefix, e.g. "Bearer abcde12345"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

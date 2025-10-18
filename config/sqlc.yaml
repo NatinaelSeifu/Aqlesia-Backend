@@ -1,0 +1,11 @@
+version: 2
+sql:
+  - engine: postgresql
+    queries: "internal/constants/query/queries/"
+    schema: "internal/constants/query/schemas/"
+    gen:
+      go:
+        package: "db"
+        out: "internal/constants/model/db"
+        sql_package: "database/sql"
+        emit_interface: false

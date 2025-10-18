@@ -1,0 +1,42 @@
+{"level":"info","ts":1759483131.7586799,"caller":"logger/logger.go:59","msg":"logger initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7588565,"caller":"logger/logger.go:59","msg":"initializing config","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7592301,"caller":"logger/logger.go:59","msg":"config initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.759261,"caller":"logger/logger.go:59","msg":"initializing database","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7596507,"caller":"logger/logger.go:59","msg":"database initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7597113,"caller":"logger/logger.go:59","msg":"initializing migration","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7795174,"caller":"logger/logger.go:59","msg":"migration initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7796307,"caller":"logger/logger.go:59","msg":"initializing persistence layer","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7796793,"caller":"logger/logger.go:59","msg":"persistence layer initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7797115,"caller":"logger/logger.go:59","msg":"initializing module","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7797425,"caller":"logger/logger.go:59","msg":"module initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.779765,"caller":"logger/logger.go:59","msg":"initializing JWT manager","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7797983,"caller":"logger/logger.go:59","msg":"JWT manager initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7798216,"caller":"logger/logger.go:59","msg":"initializing OPA service","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.785683,"caller":"logger/logger.go:59","msg":"OPA service initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7857795,"caller":"logger/logger.go:59","msg":"initializing authorization middleware","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.785805,"caller":"logger/logger.go:59","msg":"authorization middleware initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7858224,"caller":"logger/logger.go:59","msg":"initializing cron scheduler","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.785918,"caller":"logger/logger.go:59","msg":"cron scheduler initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.78594,"caller":"logger/logger.go:59","msg":"seeding initial appointment slots","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.7859566,"logger":"cron-scheduler","caller":"logger/logger.go:59","msg":"Seeding initial appointment slots for the next 2 weeks","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.814326,"logger":"cron-scheduler","caller":"logger/logger.go:59","msg":"Initial slot seeding completed","time":"2025-10-03T12:18:51+03:00","slots_created":6,"from_date":1759438800,"to_date":1760648400}
+{"level":"info","ts":1759483131.814435,"caller":"logger/logger.go:59","msg":"initial appointment slots seeded successfully","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.8144598,"caller":"logger/logger.go:59","msg":"starting cron scheduler","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.8144734,"logger":"cron-scheduler","caller":"logger/logger.go:59","msg":"Starting cron scheduler","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.814521,"logger":"cron-scheduler","caller":"logger/logger.go:59","msg":"Cron scheduler started","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.814551,"caller":"logger/logger.go:59","msg":"initializing handler","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.8145957,"caller":"logger/logger.go:59","msg":"handler initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.814647,"caller":"logger/logger.go:59","msg":"initializing server","time":"2025-10-03T12:18:51+03:00"}
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+{"level":"info","ts":1759483131.814738,"caller":"logger/logger.go:59","msg":"server initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.81477,"caller":"logger/logger.go:59","msg":"initializing router","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.8151424,"caller":"logger/logger.go:59","msg":"router initialized","time":"2025-10-03T12:18:51+03:00"}
+{"level":"info","ts":1759483131.8154233,"caller":"logger/logger.go:59","msg":"server started","time":"2025-10-03T12:18:51+03:00","host":"","port":8000}
+{"level":"info","ts":1759483168.2325063,"logger":"gin","caller":"logger/logger.go:59","msg":"GIN","time":"2025-10-03T12:19:28+03:00","x-request-id":"76341c3c-5341-433d-9a65-c7a9c044ff92","time-since-request":0,"status":401,"method":"GET","path":"/v1/questions","query":"","ip":"::1","user-agent":"curl/8.5.0","request-latency":0}
+{"level":"info","ts":1759483185.5275774,"logger":"auth-handler","caller":"logger/logger.go:59","msg":"user logged in successfully","time":"2025-10-03T12:19:45+03:00","x-request-id":"7ac72f04-cfbe-4947-bc17-27408f672da6","time-since-request":108,"user_id":"5449980c-b2de-46ac-a026-5bdc9853216b","phone":"251911123456"}
+{"level":"info","ts":1759483185.5289567,"logger":"gin","caller":"logger/logger.go:59","msg":"GIN","time":"2025-10-03T12:19:45+03:00","x-request-id":"7ac72f04-cfbe-4947-bc17-27408f672da6","time-since-request":110,"status":200,"method":"POST","path":"/v1/auth/login","query":"","ip":"::1","user-agent":"curl/8.5.0","request-latency":109}
+{"level":"info","ts":1759483199.034769,"logger":"gin","caller":"logger/logger.go:59","msg":"GIN","time":"2025-10-03T12:19:59+03:00","x-request-id":"50f8d432-b77a-46e7-8134-7f72c39c457e","time-since-request":7,"status":200,"method":"GET","path":"/v1/questions","query":"","ip":"::1","user-agent":"curl/8.5.0","request-latency":7}
+{"level":"info","ts":1759483226.8894193,"logger":"gin","caller":"logger/logger.go:59","msg":"GIN","time":"2025-10-03T12:20:26+03:00","x-request-id":"8b5f917a-45c8-44b4-b4b3-a4e745f77a37","time-since-request":2,"status":200,"method":"GET","path":"/v1/questions","query":"status=pending","ip":"::1","user-agent":"curl/8.5.0","request-latency":2}
