@@ -4,7 +4,7 @@ CREATE TABLE users (
     "middle_name" varchar      NOT NULL,
     "last_name" varchar      NOT NULL,
     "email" varchar NOT NULL,
-    "status" status NOT NULL DEFAULT 'ACTIVE',
+    "status" varchar(20) NOT NULL DEFAULT 'ACTIVE',
     "created_at" timestamptz NOT NULL default now(),
     "updated_at" timestamptz NOT NULL default now(),
     "deleted_at" timestamptz

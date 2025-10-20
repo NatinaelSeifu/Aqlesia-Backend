@@ -70,6 +70,9 @@ type AvailableDates interface {
 	ActivateDate(ctx context.Context, slotDate time.Time) error
 	DeleteOldDates(ctx context.Context, beforeDate time.Time) error
 	
+	// Booking count management (replaces database triggers for CockroachDB compatibility)
+	UpdateBookingCount(ctx context.Context, appointmentDate time.Time) error
+	
 	// Admin/Manager operations
 	GetAllAvailableDates(ctx context.Context, startDate, endDate time.Time) ([]dto.AvailableDate, error)
 	CreateAvailableDate(ctx context.Context, param dto.CreateAvailableDate) (*dto.AvailableDate, error)

@@ -1,6 +1,7 @@
 -- Add status column back to users table for user approval workflow
+-- CockroachDB compatible: using VARCHAR instead of ENUM
 ALTER TABLE users 
-  ADD COLUMN status status NOT NULL DEFAULT 'PENDING';
+  ADD COLUMN status varchar(20) NOT NULL DEFAULT 'PENDING';
 
 -- Update existing users to ACTIVE status (they were already using the system)
 UPDATE users SET status = 'ACTIVE';

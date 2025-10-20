@@ -44,7 +44,7 @@ type ChangePasswordRow struct {
 	MarriageStatus sql.NullString
 	PartnerName    sql.NullString
 	ChildrensName  []string
-	Status         Status
+	Status         string
 }
 
 func (q *Queries) ChangePassword(ctx context.Context, arg ChangePasswordParams) (ChangePasswordRow, error) {
@@ -96,7 +96,7 @@ const countUsersByStatus = `-- name: CountUsersByStatus :one
 SELECT COUNT(*) FROM users WHERE status = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) CountUsersByStatus(ctx context.Context, status Status) (int64, error) {
+func (q *Queries) CountUsersByStatus(ctx context.Context, status string) (int64, error) {
 	row := q.db.QueryRowContext(ctx, countUsersByStatus, status)
 	var count int64
 	err := row.Scan(&count)
@@ -157,7 +157,7 @@ type CreateUserParams struct {
 	Password    string
 	Role        string
 	TelegramID  sql.NullString
-	Status      Status
+	Status      string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -400,7 +400,7 @@ LIMIT $3 OFFSET $2
 `
 
 type GetUsersByStatusParams struct {
-	Status      Status
+	Status      string
 	OffsetCount int32
 	LimitCount  int32
 }
@@ -633,7 +633,7 @@ RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, 
 `
 
 type UpdateUserStatusParams struct {
-	Status Status
+	Status string
 	ID     uuid.UUID
 }
 

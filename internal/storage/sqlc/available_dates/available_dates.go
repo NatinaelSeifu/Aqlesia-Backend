@@ -241,6 +241,33 @@ func (a *availableDates) DeleteOldDates(ctx context.Context, beforeDate time.Tim
 	return nil
 }
 
+// UpdateBookingCount updates the current_bookings count for a specific date
+// This replaces the trigger logic that was removed for CockroachDB compatibility
+func (a *availableDates) UpdateBookingCount(ctx context.Context, appointmentDate time.Time) error {
+	a.log.Debug(ctx, "Updating booking count for date", zap.Time("date", appointmentDate))
+
+	// Count current active bookings for this date
+	count, err := a.db.CountAppointmentsByDate(ctx, appointmentDate)
+	if err != nil {
+		a.log.Error(ctx, "failed to count appointments by date", zap.Error(err))
+		return errors.ErrReadError.Wrap(err, "failed to count appointments")
+	}
+
+	// Update the booking count
+	_, err = a.db.UpdateDateBookingCount(ctx, db.UpdateDateBookingCountParams{
+		SlotDate:        appointmentDate,
+		CurrentBookings: int32(count),
+	})
+	if err != nil {
+		a.log.Error(ctx, "failed to update booking count", zap.Error(err))
+		return errors.ErrWriteError.Wrap(err, "failed to update booking count")
+	}
+
+	a.log.Debug(ctx, "Successfully updated booking count", 
+		zap.Time("date", appointmentDate), zap.Int64("count", count))
+	return nil
+}
+
 // Helper functions to convert database models to DTOs
 func (a *availableDates) convertToDTO(dbDates []db.AvailableDate) []dto.AvailableDate {
 	dates := make([]dto.AvailableDate, len(dbDates))

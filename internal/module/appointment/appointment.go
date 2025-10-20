@@ -18,14 +18,16 @@ type appointment struct {
 	appointmentStorage storage.Appointment
 	userStorage        storage.User
 	slotStorage        storage.AvailableSlot
+	availableDates     storage.AvailableDates
 	log                logger.Logger
 }
 
-func Init(appointmentStorage storage.Appointment, userStorage storage.User, slotStorage storage.AvailableSlot, log logger.Logger) module.Appointment {
+func Init(appointmentStorage storage.Appointment, userStorage storage.User, slotStorage storage.AvailableSlot, availableDates storage.AvailableDates, log logger.Logger) module.Appointment {
 	return &appointment{
 		appointmentStorage: appointmentStorage,
 		userStorage:        userStorage,
 		slotStorage:        slotStorage,
+		availableDates:     availableDates,
 		log:                log,
 	}
 }
@@ -53,6 +55,12 @@ func (a *appointment) Create(ctx context.Context, userID uuid.UUID, param dto.Cr
 	if err != nil {
 		a.log.Error(ctx, "failed to create appointment", zap.Error(err))
 		return nil, err
+	}
+
+	// Update booking count for the appointment date (replaces database trigger)
+	if err := a.availableDates.UpdateBookingCount(ctx, appointment.AppointmentDate); err != nil {
+		a.log.Warn(ctx, "failed to update booking count after appointment creation", zap.Error(err))
+		// Don't fail the request, just log the warning
 	}
 
 	a.log.Info(ctx, "Appointment created successfully", 
@@ -127,6 +135,19 @@ func (a *appointment) Update(ctx context.Context, id string, userID uuid.UUID, p
 	if err != nil {
 		a.log.Error(ctx, "failed to update appointment", zap.Error(err))
 		return nil, err
+	}
+
+	// Update booking counts for affected dates (replaces database trigger)
+	// If the date changed, update counts for both old and new dates
+	if !currentAppointment.AppointmentDate.Equal(updatedAppointment.AppointmentDate) {
+		// Update count for old date
+		if err := a.availableDates.UpdateBookingCount(ctx, currentAppointment.AppointmentDate); err != nil {
+			a.log.Warn(ctx, "failed to update booking count for old date", zap.Error(err))
+		}
+		// Update count for new date
+		if err := a.availableDates.UpdateBookingCount(ctx, updatedAppointment.AppointmentDate); err != nil {
+			a.log.Warn(ctx, "failed to update booking count for new date", zap.Error(err))
+		}
 	}
 
 	a.log.Info(ctx, "Appointment updated successfully", zap.String("appointment-id", id))
@@ -300,6 +321,11 @@ func (a *appointment) Cancel(ctx context.Context, id string, userID uuid.UUID) e
 		return err
 	}
 
+	// Update booking count for the appointment date (replaces database trigger)
+	if err := a.availableDates.UpdateBookingCount(ctx, currentAppointment.AppointmentDate); err != nil {
+		a.log.Warn(ctx, "failed to update booking count after cancellation", zap.Error(err))
+	}
+
 	a.log.Info(ctx, "Appointment cancelled successfully", zap.String("appointment-id", id))
 	return nil
 }
@@ -315,11 +341,23 @@ func (a *appointment) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
+	// Get current appointment info before deletion for booking count update
+	currentAppointment, err := a.appointmentStorage.Get(ctx, appointmentID)
+	if err != nil {
+		a.log.Error(ctx, "failed to get appointment for deletion", zap.Error(err))
+		return err
+	}
+
 	// Delete appointment through storage layer
 	err = a.appointmentStorage.Delete(ctx, appointmentID)
 	if err != nil {
 		a.log.Error(ctx, "failed to delete appointment", zap.Error(err))
 		return err
+	}
+
+	// Update booking count for the appointment date (replaces database trigger)
+	if err := a.availableDates.UpdateBookingCount(ctx, currentAppointment.AppointmentDate); err != nil {
+		a.log.Warn(ctx, "failed to update booking count after deletion", zap.Error(err))
 	}
 
 	a.log.Info(ctx, "Appointment deleted successfully", zap.String("appointment-id", id))

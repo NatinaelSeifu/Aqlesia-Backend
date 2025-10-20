@@ -18,7 +18,7 @@ CREATE TABLE communion (
     
     -- Ensure a user can't have duplicate communion dates
     CONSTRAINT unique_user_communion_date 
-        UNIQUE (user_id, communion_date) DEFERRABLE INITIALLY DEFERRED
+        UNIQUE (user_id, communion_date)
 );
 
 -- Add indexes
@@ -26,16 +26,5 @@ CREATE INDEX idx_communion_user_id ON communion(user_id) WHERE deleted_at IS NUL
 CREATE INDEX idx_communion_status ON communion(status) WHERE deleted_at IS NULL;
 CREATE INDEX idx_communion_approved_by ON communion(approved_by_user_id) WHERE deleted_at IS NULL;
 
--- Add trigger to update updated_at
-CREATE OR REPLACE FUNCTION update_communion_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ language plpgsql;
-
-CREATE TRIGGER trigger_communion_updated_at
-    BEFORE UPDATE ON communion
-    FOR EACH ROW
-    EXECUTE FUNCTION update_communion_updated_at();
+-- CockroachDB: Removed PL/pgSQL function and trigger
+-- updated_at will be managed in application code

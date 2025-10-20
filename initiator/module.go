@@ -51,7 +51,7 @@ func InitModule(persistence Persistence, log logger.Logger) Module {
 
 	return Module{
 		user:          user.Init(log.Named("user-module"), persistence.user),
-		appointment:   appointment.Init(persistence.appointment, persistence.user, persistence.slot, log.Named("appointment-module")),
+		appointment:   appointment.Init(persistence.appointment, persistence.user, persistence.slot, persistence.availableDates, log.Named("appointment-module")),
 		availableDates: available_dates.Init(log.Named("available-dates-module"), persistence.availableDates),
 		communion:     communion.Init(persistence.communion, persistence.user, log.Named("communion-module")),
 		questions:     questions.Init(persistence.questions, log.Named("questions-module")),

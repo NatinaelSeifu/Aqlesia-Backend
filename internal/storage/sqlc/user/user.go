@@ -51,7 +51,7 @@ func (u *user) Create(ctx context.Context, param dto.RegisterUser) (*dto.User, e
 		Password:    string(hashedPassword),
 		Role:        param.GetRole(),
 		TelegramID:  telegramID,
-		Status:      db.StatusPENDING, // Set new users to pending status
+		Status:      "PENDING", // Set new users to pending status
 	})
 	if err != nil {
 		err = errors.ErrWriteError.Wrap(err, "could not create user")
@@ -560,15 +560,10 @@ func (u *user) GetByStatus(ctx context.Context, status string, page, pageSize in
 
 // UpdateStatus updates a user's status
 func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string) (*dto.User, error) {
-	// Convert string status to Status enum
-	var dbStatus db.Status
+	// Validate status value
 	switch status {
-	case "PENDING":
-		dbStatus = db.StatusPENDING
-	case "ACTIVE":
-		dbStatus = db.StatusACTIVE
-	case "INACTIVE":
-		dbStatus = db.StatusINACTIVE
+	case "PENDING", "ACTIVE", "INACTIVE":
+		// Valid status values
 	default:
 		err := errors.ErrInvalidUserInput.New("invalid status: must be PENDING, ACTIVE, or INACTIVE")
 		u.log.Error(ctx, "invalid status for update", zap.String("status", status), zap.String("user-id", userID.String()))
@@ -577,7 +572,7 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 
 	// Update user status in database
 	updatedUser, err := u.db.UpdateUserStatus(ctx, db.UpdateUserStatusParams{
-		Status: dbStatus,
+		Status: status,
 		ID:     userID,
 	})
 	if err != nil {
