@@ -887,41 +887,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/reset": {
-            "get": {
-                "description": "Display HTML form for password reset (GET endpoint for reset links from Telegram)",
-                "produces": [
-                    "text/html"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Show password reset form",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Password reset token",
-                        "name": "token",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "HTML password reset form",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid or expired token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/reset-password": {
             "post": {
                 "description": "Reset user password using a valid reset token",

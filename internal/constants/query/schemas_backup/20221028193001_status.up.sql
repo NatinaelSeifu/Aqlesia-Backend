@@ -1,3 +1,0 @@
--- CockroachDB compatible: Use VARCHAR instead of ENUM
--- Status values: 'PENDING', 'ACTIVE', 'INACTIVE'
--- CHECK constraints will be added in the users table creation

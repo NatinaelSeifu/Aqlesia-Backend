@@ -1213,30 +1213,6 @@ paths:
       summary: Register a new user
       tags:
       - Authentication
-  /auth/reset:
-    get:
-      description: Display HTML form for password reset (GET endpoint for reset links
-        from Telegram)
-      parameters:
-      - description: Password reset token
-        in: query
-        name: token
-        required: true
-        type: string
-      produces:
-      - text/html
-      responses:
-        "200":
-          description: HTML password reset form
-          schema:
-            type: string
-        "400":
-          description: Invalid or expired token
-          schema:
-            type: string
-      summary: Show password reset form
-      tags:
-      - Authentication
   /auth/reset-password:
     post:
       consumes:
