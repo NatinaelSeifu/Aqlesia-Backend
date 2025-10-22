@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"regexp"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -56,17 +57,74 @@ type ForgotPasswordResponse struct {
 	Message string `json:"message"`
 }
 
+// VerifyOTPRequest represents the OTP verification request
+type VerifyOTPRequest struct {
+	// PhoneNumber is the Ethiopian phone number of the user
+	PhoneNumber string `json:"phone_number"`
+	// OTP is the one-time password received via Telegram
+	OTP string `json:"otp"`
+}
+
+func (v VerifyOTPRequest) Validate() error {
+	return validation.ValidateStruct(&v,
+		validation.Field(&v.PhoneNumber,
+			validation.Required.Error("phone number is required"),
+			validation.By(v.validateEthiopianPhoneNumber)),
+		validation.Field(&v.OTP,
+			validation.Required.Error("OTP is required"),
+			validation.Match(regexp.MustCompile(`^[0-9]{6}$`)).Error("OTP must be 6 digits")),
+	)
+}
+
+// validateEthiopianPhoneNumber validates Ethiopian phone numbers for OTP verification
+func (v VerifyOTPRequest) validateEthiopianPhoneNumber(value interface{}) error {
+	phoneStr, ok := value.(string)
+	if !ok {
+		return validation.NewError("validation_phone_invalid_type", "phone number must be a string")
+	}
+
+	// Parse and validate the phone number for Ethiopia (ET)
+	parsedNumber := phonenumber.Parse(phoneStr, "ET")
+
+	// Check if the parsed number is empty (invalid)
+	if parsedNumber == "" {
+		return validation.NewError("validation_phone_invalid", "phone number must be a valid Ethiopian number")
+	}
+
+	// Verify it's actually an Ethiopian number (should start with 251)
+	if len(parsedNumber) < 12 || parsedNumber[:3] != "251" {
+		return validation.NewError("validation_phone_not_ethiopian", "phone number must be a valid Ethiopian number")
+	}
+
+	return nil
+}
+
+// NormalizePhoneNumber returns the phone number in E.164 format
+func (v VerifyOTPRequest) NormalizePhoneNumber() string {
+	return phonenumber.Parse(v.PhoneNumber, "ET")
+}
+
+// VerifyOTPResponse represents the OTP verification response
+type VerifyOTPResponse struct {
+	// Valid indicates if the OTP was valid
+	Valid bool `json:"valid"`
+	// Message provides feedback to the user
+	Message string `json:"message"`
+	// ResetToken is provided only if OTP is valid (for password reset)
+	ResetToken *string `json:"reset_token,omitempty"`
+}
+
 // ResetPasswordRequest represents the password reset request payload
 type ResetPasswordRequest struct {
-	// Token is the password reset token
-	Token string `json:"token"`
+	// ResetToken is the token received after OTP verification
+	ResetToken string `json:"reset_token"`
 	// NewPassword is the new password to set
 	NewPassword string `json:"new_password"`
 }
 
 func (r ResetPasswordRequest) Validate() error {
 	return validation.ValidateStruct(&r,
-		validation.Field(&r.Token,
+		validation.Field(&r.ResetToken,
 			validation.Required.Error("reset token is required")),
 		validation.Field(&r.NewPassword,
 			validation.Required.Error("new password is required"),
@@ -140,4 +198,15 @@ type PasswordResetToken struct {
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 	Used      bool      `json:"used"`
+}
+
+// PasswordResetOTP represents a password reset OTP (for internal use)
+type PasswordResetOTP struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	OTPHash   string    `json:"-"` // Never serialize the hash
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Used      bool      `json:"used"`
+	Attempts  int       `json:"attempts"`
 }

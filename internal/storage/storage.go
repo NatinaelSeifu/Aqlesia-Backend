@@ -32,6 +32,11 @@ type User interface {
 	MarkPasswordResetTokenUsed(ctx context.Context, tokenID uuid.UUID) error
 	ResetUserPassword(ctx context.Context, hashedPassword string, userID uuid.UUID) (*dto.User, error)
 	CleanupExpiredResetTokens(ctx context.Context) error
+	
+	// Password reset OTP methods
+	CreatePasswordResetOTP(ctx context.Context, userID uuid.UUID, otpHash string, expiresAt time.Time) (*dto.PasswordResetOTP, error)
+	GetValidPasswordResetOTP(ctx context.Context, userID uuid.UUID, otpHash string) (*dto.PasswordResetOTP, error)
+	MarkPasswordResetOTPUsed(ctx context.Context, otpID uuid.UUID) error
 }
 
 type Appointment interface {

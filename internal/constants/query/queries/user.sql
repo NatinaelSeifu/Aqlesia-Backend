@@ -120,3 +120,26 @@ SET
   updated_at = now()
 WHERE id = $2 AND deleted_at IS NULL
 RETURNING *;
+
+-- name: CreatePasswordResetOTP :one
+INSERT INTO password_reset_otps (
+    user_id,
+    otp_hash,
+    expires_at
+) VALUES (
+    $1, $2, $3
+)
+RETURNING *;
+
+-- name: GetValidPasswordResetOTP :one
+SELECT * FROM password_reset_otps 
+WHERE user_id = $1 AND otp_hash = $2 AND used = FALSE AND expires_at > NOW();
+
+-- name: MarkPasswordResetOTPUsed :exec
+UPDATE password_reset_otps 
+SET used = TRUE, updated_at = NOW()
+WHERE id = $1;
+
+-- name: CleanupExpiredResetOTPs :exec
+DELETE FROM password_reset_otps 
+WHERE expires_at < NOW() OR used = TRUE;

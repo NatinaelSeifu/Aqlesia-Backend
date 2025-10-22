@@ -45,6 +45,17 @@ type Communion struct {
 	DeletedAt        sql.NullTime
 }
 
+type PasswordResetOtp struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	OtpHash   string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	ExpiresAt time.Time
+	Used      bool
+	Attempts  int32
+}
+
 type PasswordResetToken struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
@@ -68,20 +79,20 @@ type Question struct {
 
 type User struct {
 	ID               uuid.UUID
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	DeletedAt        sql.NullTime
 	Name             string
 	Lastname         string
 	PhoneNumber      string
 	Password         string
 	TelegramID       sql.NullString
 	Role             string
+	Status           string
 	JobTitle         sql.NullString
 	Education        sql.NullString
 	MarriageStatus   sql.NullString
-	ChildrensName    []string
-	Status           string
 	PartnerName      sql.NullString
+	ChildrensName    []string
 	TelegramVerified bool
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        sql.NullTime
 }

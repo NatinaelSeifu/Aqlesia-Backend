@@ -73,12 +73,16 @@ type Questions interface {
 }
 
 type PasswordReset interface {
-	// Initiate password reset process via Telegram
+	// Initiate password reset process via Telegram OTP
 	ForgotPassword(ctx context.Context, req dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error)
+	// Verify OTP and get reset token
+	VerifyOTP(ctx context.Context, req dto.VerifyOTPRequest) (*dto.VerifyOTPResponse, error)
 	// Complete password reset with token
 	ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) (*dto.ResetPasswordResponse, error)
 	// Generate Telegram link code for account linking
 	LinkTelegram(ctx context.Context, req dto.TelegramLinkRequest) (*dto.TelegramLinkResponse, error)
+	// Check Telegram verification status without sending OTP
+	CheckTelegramVerification(ctx context.Context, req dto.TelegramLinkRequest) (map[string]interface{}, error)
 	// Cleanup expired reset tokens (for cron job)
 	CleanupExpiredTokens(ctx context.Context) error
 }

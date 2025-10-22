@@ -663,9 +663,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/check-telegram": {
+            "post": {
+                "description": "Check if a user has a verified Telegram account without sending OTP",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Check Telegram verification status",
+                "parameters": [
+                    {
+                        "description": "Telegram verification check request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TelegramLinkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Verification status",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/forgot-password": {
             "post": {
-                "description": "Initiate password reset process. A reset link will be sent to the user's linked Telegram account if it exists",
+                "description": "Initiate password reset process. A 6-digit OTP will be sent to the user's linked Telegram account if it exists",
                 "consumes": [
                     "application/json"
                 ],
@@ -889,7 +936,7 @@ const docTemplate = `{
         },
         "/auth/reset-password": {
             "post": {
-                "description": "Reset user password using a valid reset token",
+                "description": "Reset user password using a reset token obtained from OTP verification",
                 "consumes": [
                     "application/json"
                 ],
@@ -920,6 +967,52 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid token or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify-otp": {
+            "post": {
+                "description": "Verify the OTP received via Telegram and get a reset token for password reset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify password reset OTP",
+                "parameters": [
+                    {
+                        "description": "OTP verification request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.VerifyOTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OTP verification result with reset token if valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.VerifyOTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or invalid OTP",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorResponse"
                         }
@@ -3414,8 +3507,8 @@ const docTemplate = `{
                     "description": "NewPassword is the new password to set",
                     "type": "string"
                 },
-                "token": {
-                    "description": "Token is the password reset token",
+                "reset_token": {
+                    "description": "ResetToken is the token received after OTP verification",
                     "type": "string"
                 }
             }
@@ -3649,6 +3742,36 @@ const docTemplate = `{
                 "status": {
                     "description": "Status is the new status to set (ACTIVE, INACTIVE)",
                     "type": "string"
+                }
+            }
+        },
+        "dto.VerifyOTPRequest": {
+            "type": "object",
+            "properties": {
+                "otp": {
+                    "description": "OTP is the one-time password received via Telegram",
+                    "type": "string"
+                },
+                "phone_number": {
+                    "description": "PhoneNumber is the Ethiopian phone number of the user",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.VerifyOTPResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Message provides feedback to the user",
+                    "type": "string"
+                },
+                "reset_token": {
+                    "description": "ResetToken is provided only if OTP is valid (for password reset)",
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid indicates if the OTP was valid",
+                    "type": "boolean"
                 }
             }
         },

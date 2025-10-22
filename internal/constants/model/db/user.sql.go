@@ -71,6 +71,16 @@ func (q *Queries) ChangePassword(ctx context.Context, arg ChangePasswordParams) 
 	return i, err
 }
 
+const cleanupExpiredResetOTPs = `-- name: CleanupExpiredResetOTPs :exec
+DELETE FROM password_reset_otps 
+WHERE expires_at < NOW() OR used = TRUE
+`
+
+func (q *Queries) CleanupExpiredResetOTPs(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, cleanupExpiredResetOTPs)
+	return err
+}
+
 const cleanupExpiredResetTokens = `-- name: CleanupExpiredResetTokens :exec
 DELETE FROM password_reset_tokens 
 WHERE expires_at < NOW() OR used = TRUE
@@ -101,6 +111,39 @@ func (q *Queries) CountUsersByStatus(ctx context.Context, status string) (int64,
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const createPasswordResetOTP = `-- name: CreatePasswordResetOTP :one
+INSERT INTO password_reset_otps (
+    user_id,
+    otp_hash,
+    expires_at
+) VALUES (
+    $1, $2, $3
+)
+RETURNING id, user_id, otp_hash, created_at, updated_at, expires_at, used, attempts
+`
+
+type CreatePasswordResetOTPParams struct {
+	UserID    uuid.UUID
+	OtpHash   string
+	ExpiresAt time.Time
+}
+
+func (q *Queries) CreatePasswordResetOTP(ctx context.Context, arg CreatePasswordResetOTPParams) (PasswordResetOtp, error) {
+	row := q.db.QueryRowContext(ctx, createPasswordResetOTP, arg.UserID, arg.OtpHash, arg.ExpiresAt)
+	var i PasswordResetOtp
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.OtpHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ExpiresAt,
+		&i.Used,
+		&i.Attempts,
+	)
+	return i, err
 }
 
 const createPasswordResetToken = `-- name: CreatePasswordResetToken :one
@@ -147,7 +190,7 @@ INSERT INTO users (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified
+RETURNING id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at
 `
 
 type CreateUserParams struct {
@@ -173,28 +216,28 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const deleteUser = `-- name: DeleteUser :one
-UPDATE users set deleted_at =now() where id=$1 AND deleted_at IS NULL RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified
+UPDATE users set deleted_at =now() where id=$1 AND deleted_at IS NULL RETURNING id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -202,28 +245,28 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified FROM users WHERE id = $1 AND deleted_at IS NULL
+SELECT id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at FROM users WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -231,28 +274,28 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByPhone = `-- name: GetUserByPhone :one
-SELECT id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified FROM users WHERE phone_number = $1 AND deleted_at IS NULL
+SELECT id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at FROM users WHERE phone_number = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetUserByPhone(ctx context.Context, phoneNumber string) (User, error) {
@@ -260,28 +303,28 @@ func (q *Queries) GetUserByPhone(ctx context.Context, phoneNumber string) (User,
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByPhoneWithPassword = `-- name: GetUserByPhoneWithPassword :one
-SELECT id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified FROM users 
+SELECT id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at FROM users 
 WHERE phone_number = $1 AND deleted_at IS NULL
 `
 
@@ -290,28 +333,28 @@ func (q *Queries) GetUserByPhoneWithPassword(ctx context.Context, phoneNumber st
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByTelegramID = `-- name: GetUserByTelegramID :one
-SELECT id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified FROM users 
+SELECT id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at FROM users 
 WHERE telegram_id = $1 AND telegram_verified = TRUE AND deleted_at IS NULL
 `
 
@@ -320,28 +363,28 @@ func (q *Queries) GetUserByTelegramID(ctx context.Context, telegramID sql.NullSt
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified FROM users WHERE deleted_at IS NULL
+SELECT id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at FROM users WHERE deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $1
 `
@@ -362,22 +405,22 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, err
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
 			&i.Name,
 			&i.Lastname,
 			&i.PhoneNumber,
 			&i.Password,
 			&i.TelegramID,
 			&i.Role,
+			&i.Status,
 			&i.JobTitle,
 			&i.Education,
 			&i.MarriageStatus,
-			pq.Array(&i.ChildrensName),
-			&i.Status,
 			&i.PartnerName,
+			pq.Array(&i.ChildrensName),
 			&i.TelegramVerified,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -393,7 +436,7 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, err
 }
 
 const getUsersByStatus = `-- name: GetUsersByStatus :many
-SELECT id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified FROM users 
+SELECT id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at FROM users 
 WHERE status = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $2
@@ -416,22 +459,22 @@ func (q *Queries) GetUsersByStatus(ctx context.Context, arg GetUsersByStatusPara
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
 			&i.Name,
 			&i.Lastname,
 			&i.PhoneNumber,
 			&i.Password,
 			&i.TelegramID,
 			&i.Role,
+			&i.Status,
 			&i.JobTitle,
 			&i.Education,
 			&i.MarriageStatus,
-			pq.Array(&i.ChildrensName),
-			&i.Status,
 			&i.PartnerName,
+			pq.Array(&i.ChildrensName),
 			&i.TelegramVerified,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -444,6 +487,32 @@ func (q *Queries) GetUsersByStatus(ctx context.Context, arg GetUsersByStatusPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const getValidPasswordResetOTP = `-- name: GetValidPasswordResetOTP :one
+SELECT id, user_id, otp_hash, created_at, updated_at, expires_at, used, attempts FROM password_reset_otps 
+WHERE user_id = $1 AND otp_hash = $2 AND used = FALSE AND expires_at > NOW()
+`
+
+type GetValidPasswordResetOTPParams struct {
+	UserID  uuid.UUID
+	OtpHash string
+}
+
+func (q *Queries) GetValidPasswordResetOTP(ctx context.Context, arg GetValidPasswordResetOTPParams) (PasswordResetOtp, error) {
+	row := q.db.QueryRowContext(ctx, getValidPasswordResetOTP, arg.UserID, arg.OtpHash)
+	var i PasswordResetOtp
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.OtpHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ExpiresAt,
+		&i.Used,
+		&i.Attempts,
+	)
+	return i, err
 }
 
 const getValidPasswordResetToken = `-- name: GetValidPasswordResetToken :one
@@ -466,6 +535,17 @@ func (q *Queries) GetValidPasswordResetToken(ctx context.Context, tokenHash stri
 	return i, err
 }
 
+const markPasswordResetOTPUsed = `-- name: MarkPasswordResetOTPUsed :exec
+UPDATE password_reset_otps 
+SET used = TRUE, updated_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) MarkPasswordResetOTPUsed(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, markPasswordResetOTPUsed, id)
+	return err
+}
+
 const markPasswordResetTokenUsed = `-- name: MarkPasswordResetTokenUsed :exec
 UPDATE password_reset_tokens 
 SET used = TRUE, updated_at = NOW()
@@ -483,7 +563,7 @@ SET
   password = $1,
   updated_at = now()
 WHERE id = $2 AND deleted_at IS NULL
-RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified
+RETURNING id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at
 `
 
 type ResetUserPasswordParams struct {
@@ -496,22 +576,22 @@ func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordPa
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -523,7 +603,7 @@ SET
   telegram_verified = $2,
   updated_at = now()
 WHERE phone_number = $3 AND deleted_at IS NULL
-RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified
+RETURNING id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at
 `
 
 type UpdateTelegramInfoParams struct {
@@ -537,22 +617,22 @@ func (q *Queries) UpdateTelegramInfo(ctx context.Context, arg UpdateTelegramInfo
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -571,7 +651,7 @@ SET
   telegram_id = $9,
   updated_at = now()
 WHERE id = $10 AND deleted_at IS NULL
-RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified
+RETURNING id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
@@ -603,22 +683,22 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -629,7 +709,7 @@ SET
   status = $1,
   updated_at = now()
 WHERE id = $2 AND deleted_at IS NULL
-RETURNING id, created_at, updated_at, deleted_at, name, lastname, phone_number, password, telegram_id, role, job_title, education, marriage_status, childrens_name, status, partner_name, telegram_verified
+RETURNING id, name, lastname, phone_number, password, telegram_id, role, status, job_title, education, marriage_status, partner_name, childrens_name, telegram_verified, created_at, updated_at, deleted_at
 `
 
 type UpdateUserStatusParams struct {
@@ -642,22 +722,22 @@ func (q *Queries) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusPara
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Lastname,
 		&i.PhoneNumber,
 		&i.Password,
 		&i.TelegramID,
 		&i.Role,
+		&i.Status,
 		&i.JobTitle,
 		&i.Education,
 		&i.MarriageStatus,
-		pq.Array(&i.ChildrensName),
-		&i.Status,
 		&i.PartnerName,
+		pq.Array(&i.ChildrensName),
 		&i.TelegramVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }

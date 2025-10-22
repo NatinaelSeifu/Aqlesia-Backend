@@ -278,6 +278,25 @@ func (bs *BotService) SendResetLink(ctx context.Context, telegramID string, rese
 	return nil
 }
 
+// SendOTP sends a one-time password to user's Telegram
+func (bs *BotService) SendOTP(ctx context.Context, telegramID string, otp string) error {
+	chatID, err := strconv.ParseInt(telegramID, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid telegram ID: %w", err)
+	}
+
+	message := fmt.Sprintf("🔐 Password Reset OTP\n\nYour one-time password is: **%s**\n\nThis code will expire in 5 minutes.\n\nDo not share this code with anyone.", otp)
+
+	msg := tgbotapi.NewMessage(chatID, message)
+	msg.ParseMode = "Markdown"
+
+	if _, err := bs.bot.Send(msg); err != nil {
+		return fmt.Errorf("failed to send OTP via Telegram: %w", err)
+	}
+
+	return nil
+}
+
 func (bs *BotService) generateResetToken(ctx context.Context, userID uuid.UUID) (string, error) {
 	// Generate random token
 	tokenBytes := make([]byte, 32)
