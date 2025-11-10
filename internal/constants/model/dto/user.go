@@ -119,7 +119,7 @@ type UpdateUser struct {
 	JobTitle *string `json:"job_title,omitempty"`
 	// Education is the user's education background
 	Education *string `json:"education,omitempty"`
-	// MarriageStatus is the user's marriage status (single, married, divorced, widowed)
+	// MarriageStatus is the user's marriage status (single, married, divorced, widowed, engaged)
 	MarriageStatus *string `json:"marriage_status,omitempty"`
 	// PartnerName is the name of the user's partner (spouse)
 	PartnerName *string `json:"partner_name,omitempty"`
@@ -137,7 +137,7 @@ func (u UpdateUser) Validate() error {
 		validation.Field(&u.PhoneNumber, validation.When(u.PhoneNumber != nil, validation.By(u.validateEthiopianPhoneNumber))),
 		validation.Field(&u.JobTitle, validation.When(u.JobTitle != nil && *u.JobTitle != "", validation.Length(1, 100).Error("job title must be between 1 and 100 characters"))),
 		validation.Field(&u.Education, validation.When(u.Education != nil && *u.Education != "", validation.Length(1, 200).Error("education must be between 1 and 200 characters"))),
-		validation.Field(&u.MarriageStatus, validation.When(u.MarriageStatus != nil && *u.MarriageStatus != "", validation.In("single", "married", "divorced", "widowed").Error("marriage status must be one of: single, married, divorced, widowed"))),
+		validation.Field(&u.MarriageStatus, validation.When(u.MarriageStatus != nil && *u.MarriageStatus != "", validation.In("single", "married", "divorced", "widowed", "engaged").Error("marriage status must be one of: single, married, divorced, widowed, engaged"))),
 		validation.Field(&u.PartnerName, validation.When(u.PartnerName != nil && *u.PartnerName != "", validation.Length(1, 100).Error("partner name must be between 1 and 100 characters"))),
 		// Validate children names with a custom validator that dereferences pointers and enforces limits
 		validation.Field(&u.ChildrensName, validation.When(u.ChildrensName != nil, validation.By(u.validateChildrenNames))),

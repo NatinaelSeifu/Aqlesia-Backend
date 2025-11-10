@@ -3627,7 +3627,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "marriage_status": {
-                    "description": "MarriageStatus is the user's marriage status (single, married, divorced, widowed)",
+                "description": "MarriageStatus is the user's marriage status (single, married, divorced, widowed, engaged)",
                     "type": "string"
                 },
                 "name": {

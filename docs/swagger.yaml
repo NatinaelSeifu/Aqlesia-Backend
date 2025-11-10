@@ -455,8 +455,7 @@ definitions:
         description: LastName is the last name of the user.
         type: string
       marriage_status:
-        description: MarriageStatus is the user's marriage status (single, married,
-          divorced, widowed)
+        description: MarriageStatus is the user's marriage status (single, married, divorced, widowed, engaged)
         type: string
       name:
         description: Name is the first name of the user.
