@@ -21,6 +21,9 @@ type User interface {
 	UpdateStatus(ctx context.Context, userID uuid.UUID, status string) (*dto.User, error)
 	DeleteUser(ctx context.Context, userId uuid.UUID) error
 	ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) (*dto.User, error)
+
+	// Profile image
+	UpdateProfileImage(ctx context.Context, userID uuid.UUID, imageURL string) error
 	
 	// Telegram integration methods
 	UpdateTelegramInfo(ctx context.Context, telegramID string, verified bool, phoneNumber string) (*dto.User, error)

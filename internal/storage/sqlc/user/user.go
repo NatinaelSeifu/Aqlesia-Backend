@@ -625,3 +625,22 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
 }
+
+func (u *user) UpdateProfileImage(ctx context.Context, userID uuid.UUID, imageURL string) error {
+	// Update only the profile_image_url; keep generated queries intact by using Pool directly
+	ct, err := u.db.Pool.Exec(ctx,
+		"UPDATE users SET profile_image_url = $1, updated_at = now() WHERE id = $2 AND deleted_at IS NULL",
+		imageURL, userID,
+	)
+	if err != nil {
+		err = errors.ErrWriteError.Wrap(err, "could not update profile image URL")
+		u.log.Error(ctx, "unable to update user profile image", zap.Error(err), zap.String("user-id", userID.String()))
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		err := errors.ErrNoRecordFound.New("user not found")
+		u.log.Info(ctx, "no user updated for profile image", zap.String("user-id", userID.String()))
+		return err
+	}
+	return nil
+}

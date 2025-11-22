@@ -10,9 +10,16 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	aws "github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -233,7 +240,7 @@ func (u *user) UpdateUserStatus(ctx *gin.Context) {
 	authUserInterface, exists := ctx.Get("auth_user")
 	if exists {
 		if authUser, ok := authUserInterface.(*dto.User); ok {
-			u.logger.Info(ctx, "user status updated by admin", 
+			u.logger.Info(ctx, "user status updated by admin",
 				zap.String("target-user-id", ctx.Param("id")),
 				zap.String("admin-user-id", authUser.ID.String()),
 				zap.String("new-status", statusRequest.Status))
@@ -243,3 +250,139 @@ func (u *user) UpdateUserStatus(ctx *gin.Context) {
 	constants.SuccessResponse(ctx, http.StatusOK, updatedUser, nil)
 }
 
+// UploadAvatar uploads and sets the user's profile picture.
+//
+//	@Summary		Upload user avatar
+//	@Description	Upload a profile picture to DigitalOcean Spaces and set it for the user
+//	@Tags			Users
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id			path	string	true	"User ID (UUID)"
+//	@Param			file		formData	file	true	"Image file (max 5MB)"
+//	@Success		200			{object}	map[string]string	"Successfully uploaded avatar"
+//	@Failure		400			{object}	model.ErrorResponse	"Bad request - invalid image or input"
+//	@Failure		401			{object}	model.ErrorResponse	"Unauthorized"
+//	@Failure		403			{object}	model.ErrorResponse	"Forbidden"
+//	@Failure		404			{object}	model.ErrorResponse	"User not found"
+//	@Router			/users/{id}/avatar [post]
+func (u *user) UploadAvatar(ctx *gin.Context) {
+	cntx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	fileHeader, err := ctx.FormFile("file")
+	if err != nil {
+		err := errors.ErrInvalidUserInput.Wrap(err, "file is required")
+		u.logger.Error(ctx, "unable to read upload file", zap.Error(err))
+		_ = ctx.Error(err)
+		return
+	}
+
+	// Basic size limit: 5MB
+	const maxSize int64 = 5 * 1024 * 1024
+	if fileHeader.Size > maxSize {
+		err := errors.ErrInvalidUserInput.New("file is too large (max 5MB)")
+		_ = ctx.Error(err)
+		return
+	}
+
+	f, err := fileHeader.Open()
+	if err != nil {
+		err := errors.ErrInvalidUserInput.Wrap(err, "could not open uploaded file")
+		_ = ctx.Error(err)
+		return
+	}
+	defer f.Close()
+
+	// Detect content type
+	buf := make([]byte, 512)
+	n, _ := f.Read(buf)
+	contentType := http.DetectContentType(buf[:n])
+	if _, err := f.Seek(0, 0); err != nil {
+		_ = ctx.Error(err)
+		return
+	}
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+		err := errors.ErrInvalidUserInput.New("unsupported image type (allowed: jpeg, png, webp)")
+		_ = ctx.Error(err)
+		return
+	}
+
+	// Build object key
+	userID := ctx.Param("id")
+	ext := ".jpg"
+	switch contentType {
+	case "image/png":
+		ext = ".png"
+	case "image/webp":
+		ext = ".webp"
+	}
+	objectKey := "Sewasew-SGT/" + userID + ext
+
+	// S3 config from viper
+	endpoint := viper.GetString("spaces.endpoint")
+	region := viper.GetString("spaces.region")
+	bucket := viper.GetString("spaces.bucket")
+	accessKey := viper.GetString("spaces.access_key")
+	secretKey := viper.GetString("spaces.secret_key")
+	cdnBase := viper.GetString("spaces.cdn_base_url")
+
+	if endpoint == "" || region == "" || bucket == "" || accessKey == "" || secretKey == "" {
+		u.logger.Error(ctx, "spaces config is incomplete")
+		_ = ctx.Error(errors.ErrInvalidUserInput.New("object storage is not configured"))
+		return
+	}
+
+	// Build AWS SDK v2 config for DO Spaces
+	awsCfg, err := awsconfig.LoadDefaultConfig(cntx,
+		awsconfig.WithRegion(region),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+	)
+	if err != nil {
+		u.logger.Error(ctx, "failed to load AWS config", zap.Error(err))
+		_ = ctx.Error(err)
+		return
+	}
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		return aws.Endpoint{URL: endpoint, HostnameImmutable: true}, nil
+	})
+	awsCfg.EndpointResolverWithOptions = customResolver
+
+	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		o.UsePathStyle = false
+	})
+	uploader := manager.NewUploader(s3Client)
+
+	// Upload
+	uploadInput := &s3.PutObjectInput{
+		Bucket:       &bucket,
+		Key:          &objectKey,
+		Body:         f,
+		ContentType:  &contentType,
+		CacheControl: aws.String("public, max-age=31536000, immutable"),
+		ACL:          "public-read",
+	}
+	_, err = uploader.Upload(cntx, uploadInput)
+	if err != nil {
+		u.logger.Error(ctx, "failed to upload to spaces", zap.Error(err))
+		_ = ctx.Error(errors.ErrWriteError.Wrap(err, "failed to upload image"))
+		return
+	}
+
+	// Construct public URL
+	imageURL := ""
+	if cdnBase != "" {
+		imageURL = strings.TrimRight(cdnBase, "/") + "/" + objectKey
+	} else {
+		// Fallback to default Spaces URL format
+		imageURL = strings.TrimRight(endpoint, "/") + "/" + bucket + "/" + objectKey
+	}
+
+	// Persist URL in DB
+	if err := u.userModule.UpdateProfileImage(cntx, userID, imageURL); err != nil {
+		_ = ctx.Error(err)
+		return
+	}
+
+	constants.SuccessResponse(ctx, http.StatusOK, map[string]string{"image_url": imageURL}, nil)
+}

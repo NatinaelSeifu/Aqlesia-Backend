@@ -24,6 +24,12 @@ func InitRoute(grp *gin.RouterGroup, user rest.User, jwtManager *auth.JWTManager
 			Middlewares: []gin.HandlerFunc{authMiddleware, authzMiddleware.RequireUserAccess("update")},
 		},
 		{
+			Method:      http.MethodPost,
+			Path:        "/:id/avatar",
+			Handler:     user.UploadAvatar,
+			Middlewares: []gin.HandlerFunc{authMiddleware, authzMiddleware.RequireUserAccess("update")},
+		},
+		{
 			Method:      http.MethodGet,
 			Path:        "/:id",
 			Handler:     user.GetUser,
