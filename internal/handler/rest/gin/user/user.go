@@ -343,13 +343,9 @@ func (u *user) UploadAvatar(ctx *gin.Context) {
 		_ = ctx.Error(err)
 		return
 	}
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{URL: endpoint, HostnameImmutable: true}, nil
-	})
-	awsCfg.EndpointResolverWithOptions = customResolver
-
 	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
 		o.UsePathStyle = false
+		o.BaseEndpoint = aws.String(endpoint)
 	})
 	uploader := manager.NewUploader(s3Client)
 
