@@ -455,7 +455,8 @@ definitions:
         description: LastName is the last name of the user.
         type: string
       marriage_status:
-        description: MarriageStatus is the user's marriage status (single, married, divorced, widowed, engaged)
+        description: MarriageStatus is the user's marriage status (single, married,
+          divorced, widowed, engaged)
         type: string
       name:
         description: Name is the first name of the user.
@@ -511,6 +512,11 @@ definitions:
       phone_number:
         description: PhoneNumber is the Ethiopian phone number of the user.
         type: string
+      profile_image:
+        description: |-
+          UpdatedAt is the time the user was last updated.
+          ProfileImage is the URL of the user's profile picture
+        type: string
       role:
         description: Role is the user's role (admin, manager, user)
         type: string
@@ -521,7 +527,6 @@ definitions:
         description: TelegramID is the optional Telegram ID of the user.
         type: string
       updated_at:
-        description: UpdatedAt is the time the user was last updated.
         type: string
     type: object
   dto.UserListResponse:
@@ -2520,6 +2525,53 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user profile
+      tags:
+      - Users
+  /users/{id}/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a profile picture to DigitalOcean Spaces and set it for
+        the user
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image file (max 5MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully uploaded avatar
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request - invalid image or input
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload user avatar
       tags:
       - Users
   /users/{id}/status:

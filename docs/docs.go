@@ -2907,6 +2907,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/{id}/avatar": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a profile picture to DigitalOcean Spaces and set it for the user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Upload user avatar",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image file (max 5MB)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully uploaded avatar",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid image or input",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}/status": {
             "patch": {
                 "security": [
@@ -3627,7 +3698,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "marriage_status": {
-                "description": "MarriageStatus is the user's marriage status (single, married, divorced, widowed, engaged)",
+                    "description": "MarriageStatus is the user's marriage status (single, married, divorced, widowed, engaged)",
                     "type": "string"
                 },
                 "name": {
@@ -3698,6 +3769,10 @@ const docTemplate = `{
                     "description": "PhoneNumber is the Ethiopian phone number of the user.",
                     "type": "string"
                 },
+                "profile_image": {
+                    "description": "UpdatedAt is the time the user was last updated.\nProfileImage is the URL of the user's profile picture",
+                    "type": "string"
+                },
                 "role": {
                     "description": "Role is the user's role (admin, manager, user)",
                     "type": "string"
@@ -3711,7 +3786,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "description": "UpdatedAt is the time the user was last updated.",
                     "type": "string"
                 }
             }

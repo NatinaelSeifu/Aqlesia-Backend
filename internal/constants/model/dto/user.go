@@ -40,6 +40,8 @@ type User struct {
 	// DeletedAt is the time the user was deleted.
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// UpdatedAt is the time the user was last updated.
+        // ProfileImage is the URL of the user's profile picture
+        ProfileImage *string `json:"profile_image,omitempty"`
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 

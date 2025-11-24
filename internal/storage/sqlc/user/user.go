@@ -43,7 +43,7 @@ func (u *user) Create(ctx context.Context, param dto.RegisterUser) (*dto.User, e
 
 	// Normalize phone number to E.164 format for storage
 	normalizedPhone := param.NormalizePhoneNumber()
-	
+
 	user, err := u.db.CreateUser(ctx, db.CreateUserParams{
 		Name:        param.Name,
 		Lastname:    param.LastName,
@@ -86,6 +86,7 @@ func (u *user) Create(ctx context.Context, param dto.RegisterUser) (*dto.User, e
 		MarriageStatus: responseMarriageStatus,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   nil,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -109,11 +110,11 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		}
 	}
 
-	// Handle optional fields: 
+	// Handle optional fields:
 	// - If field is provided (not nil), use the provided value (empty string becomes NULL)
 	// - If field is not provided (nil), set to NULL
 	var jobTitle, education, marriageStatus, partnerName, telegramID sql.NullString
-	
+
 	if param.JobTitle != nil {
 		if *param.JobTitle == "" {
 			jobTitle = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -124,7 +125,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		jobTitle = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.Education != nil {
 		if *param.Education == "" {
 			education = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -135,7 +136,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		education = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.MarriageStatus != nil {
 		if *param.MarriageStatus == "" {
 			marriageStatus = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -146,7 +147,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		marriageStatus = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.PartnerName != nil {
 		if *param.PartnerName == "" {
 			partnerName = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -157,7 +158,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		partnerName = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.TelegramID != nil {
 		if *param.TelegramID == "" {
 			telegramID = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -229,6 +230,13 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		responsePartnerName = &user.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", id).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	return &dto.User{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -242,6 +250,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		PartnerName:    responsePartnerName,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -273,6 +282,13 @@ func (u *user) Get(ctx context.Context, id uuid.UUID) (*dto.User, error) {
 		responsePartnerName = &user.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", id).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	return &dto.User{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -286,6 +302,7 @@ func (u *user) Get(ctx context.Context, id uuid.UUID) (*dto.User, error) {
 		PartnerName:    responsePartnerName,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -334,6 +351,13 @@ func (u *user) GetAll(ctx context.Context, page, pageSize int) ([]dto.User, int6
 			responsePartnerName = &user.PartnerName.String
 		}
 
+		var profileImageURL sql.NullString
+		_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", user.ID).Scan(&profileImageURL)
+		var responseProfileImage *string
+		if profileImageURL.Valid {
+			responseProfileImage = &profileImageURL.String
+		}
+
 		dtoUsers[i] = dto.User{
 			ID:             user.ID,
 			Name:           user.Name,
@@ -347,6 +371,7 @@ func (u *user) GetAll(ctx context.Context, page, pageSize int) ([]dto.User, int6
 			PartnerName:    responsePartnerName,
 			ChildrensName:  user.ChildrensName,
 			TelegramID:     responseTelegramID,
+			ProfileImage:   responseProfileImage,
 			CreatedAt:      user.CreatedAt,
 			UpdatedAt:      user.UpdatedAt,
 		}
@@ -401,6 +426,13 @@ func (u *user) GetUserByPhone(ctx context.Context, phoneNumber string) (*dto.Use
 		responsePartnerName = &user.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", user.ID).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	return &dto.User{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -414,6 +446,7 @@ func (u *user) GetUserByPhone(ctx context.Context, phoneNumber string) (*dto.Use
 		PartnerName:    responsePartnerName,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -514,6 +547,13 @@ func (u *user) ChangePassword(ctx context.Context, userID uuid.UUID, currentPass
 		responsePartnerName = &updatedUser.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", userID).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	u.log.Info(ctx, "Password changed successfully", zap.String("user-id", userID.String()))
 
 	return &dto.User{
@@ -529,6 +569,7 @@ func (u *user) ChangePassword(ctx context.Context, userID uuid.UUID, currentPass
 		PartnerName:    responsePartnerName,
 		ChildrensName:  updatedUser.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      updatedUser.CreatedAt,
 		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
@@ -604,7 +645,18 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 		responsePartnerName = &updatedUser.PartnerName.String
 	}
 
-	u.log.Info(ctx, "user status updated successfully", 
+	if updatedUser.PartnerName.Valid {
+		responsePartnerName = &updatedUser.PartnerName.String
+	}
+
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", userID).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
+	u.log.Info(ctx, "user status updated successfully",
 		zap.String("user-id", userID.String()),
 		zap.String("new-status", status))
 
@@ -621,6 +673,7 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 		PartnerName:    responsePartnerName,
 		ChildrensName:  updatedUser.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      updatedUser.CreatedAt,
 		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
