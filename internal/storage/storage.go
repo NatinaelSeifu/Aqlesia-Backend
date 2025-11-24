@@ -21,6 +21,9 @@ type User interface {
 	UpdateStatus(ctx context.Context, userID uuid.UUID, status string) (*dto.User, error)
 	DeleteUser(ctx context.Context, userId uuid.UUID) error
 	ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) (*dto.User, error)
+
+	// Profile image
+	UpdateProfileImage(ctx context.Context, userID uuid.UUID, imageURL string) error
 	
 	// Telegram integration methods
 	UpdateTelegramInfo(ctx context.Context, telegramID string, verified bool, phoneNumber string) (*dto.User, error)
@@ -32,6 +35,11 @@ type User interface {
 	MarkPasswordResetTokenUsed(ctx context.Context, tokenID uuid.UUID) error
 	ResetUserPassword(ctx context.Context, hashedPassword string, userID uuid.UUID) (*dto.User, error)
 	CleanupExpiredResetTokens(ctx context.Context) error
+	
+	// Password reset OTP methods
+	CreatePasswordResetOTP(ctx context.Context, userID uuid.UUID, otpHash string, expiresAt time.Time) (*dto.PasswordResetOTP, error)
+	GetValidPasswordResetOTP(ctx context.Context, userID uuid.UUID, otpHash string) (*dto.PasswordResetOTP, error)
+	MarkPasswordResetOTPUsed(ctx context.Context, otpID uuid.UUID) error
 }
 
 type Appointment interface {
@@ -69,6 +77,9 @@ type AvailableDates interface {
 	DeactivateDate(ctx context.Context, slotDate time.Time) error
 	ActivateDate(ctx context.Context, slotDate time.Time) error
 	DeleteOldDates(ctx context.Context, beforeDate time.Time) error
+	
+	// Booking count management (replaces database triggers for CockroachDB compatibility)
+	UpdateBookingCount(ctx context.Context, appointmentDate time.Time) error
 	
 	// Admin/Manager operations
 	GetAllAvailableDates(ctx context.Context, startDate, endDate time.Time) ([]dto.AvailableDate, error)

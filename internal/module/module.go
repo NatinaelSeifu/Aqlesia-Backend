@@ -17,6 +17,7 @@ type User interface {
 	UpdateStatus(ctx context.Context, id string, status string) (*dto.User, error)
 	DeleteUser(ctx context.Context, userId string) error
 	ChangePassword(ctx context.Context, userID string, param dto.ChangePasswordRequest) (*dto.User, error)
+	UpdateProfileImage(ctx context.Context, id string, imageURL string) error
 }
 
 type Appointment interface {
@@ -47,7 +48,7 @@ type AvailableDates interface {
 	// Public endpoints (for all users)
 	GetAvailableDates(ctx context.Context, startDate, endDate time.Time, onlyAvailable bool) ([]dto.AvailableDate, error)
 	GetAvailableDateByDate(ctx context.Context, dateStr string) (*dto.AvailableDate, error)
-	
+
 	// Admin/Manager endpoints
 	GetAllAvailableDates(ctx context.Context, query dto.AvailableDateQuery) ([]dto.AvailableDate, error)
 	CreateAvailableDate(ctx context.Context, param dto.CreateAvailableDate) (*dto.AvailableDate, error)
@@ -62,7 +63,7 @@ type Questions interface {
 	UpdateMyQuestion(ctx context.Context, id string, userID uuid.UUID, param dto.UpdateQuestion) (*dto.Question, error)
 	DeleteMyQuestion(ctx context.Context, id string, userID uuid.UUID) error
 	GetMyQuestionStats(ctx context.Context, userID uuid.UUID) (*dto.QuestionStats, error)
-	
+
 	// Admin/Manager endpoints
 	GetQuestions(ctx context.Context, query dto.QuestionQuery) (*dto.QuestionsListResponse, error)
 	GetQuestion(ctx context.Context, id string) (*dto.Question, error)
@@ -73,12 +74,16 @@ type Questions interface {
 }
 
 type PasswordReset interface {
-	// Initiate password reset process via Telegram
+	// Initiate password reset process via Telegram OTP
 	ForgotPassword(ctx context.Context, req dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error)
+	// Verify OTP and get reset token
+	VerifyOTP(ctx context.Context, req dto.VerifyOTPRequest) (*dto.VerifyOTPResponse, error)
 	// Complete password reset with token
 	ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) (*dto.ResetPasswordResponse, error)
 	// Generate Telegram link code for account linking
 	LinkTelegram(ctx context.Context, req dto.TelegramLinkRequest) (*dto.TelegramLinkResponse, error)
+	// Check Telegram verification status without sending OTP
+	CheckTelegramVerification(ctx context.Context, req dto.TelegramLinkRequest) (map[string]interface{}, error)
 	// Cleanup expired reset tokens (for cron job)
 	CleanupExpiredTokens(ctx context.Context) error
 }

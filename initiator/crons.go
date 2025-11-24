@@ -16,7 +16,7 @@ const (
 	// MaxAppointmentsPerDay defines the daily capacity for appointments read from config
 	MaxAppointmentsPerDay = 10
 	// SeedWeeks defines how many weeks ahead to seed slots
-	SeedWeeks = 2
+	SeedWeeks = 4
 )
 
 type CronScheduler struct {

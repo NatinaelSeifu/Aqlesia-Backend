@@ -43,7 +43,7 @@ func (u *user) Create(ctx context.Context, param dto.RegisterUser) (*dto.User, e
 
 	// Normalize phone number to E.164 format for storage
 	normalizedPhone := param.NormalizePhoneNumber()
-	
+
 	user, err := u.db.CreateUser(ctx, db.CreateUserParams{
 		Name:        param.Name,
 		Lastname:    param.LastName,
@@ -51,7 +51,7 @@ func (u *user) Create(ctx context.Context, param dto.RegisterUser) (*dto.User, e
 		Password:    string(hashedPassword),
 		Role:        param.GetRole(),
 		TelegramID:  telegramID,
-		Status:      db.StatusPENDING, // Set new users to pending status
+		Status:      "PENDING", // Set new users to pending status
 	})
 	if err != nil {
 		err = errors.ErrWriteError.Wrap(err, "could not create user")
@@ -86,6 +86,7 @@ func (u *user) Create(ctx context.Context, param dto.RegisterUser) (*dto.User, e
 		MarriageStatus: responseMarriageStatus,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   nil,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -109,11 +110,11 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		}
 	}
 
-	// Handle optional fields: 
+	// Handle optional fields:
 	// - If field is provided (not nil), use the provided value (empty string becomes NULL)
 	// - If field is not provided (nil), set to NULL
 	var jobTitle, education, marriageStatus, partnerName, telegramID sql.NullString
-	
+
 	if param.JobTitle != nil {
 		if *param.JobTitle == "" {
 			jobTitle = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -124,7 +125,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		jobTitle = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.Education != nil {
 		if *param.Education == "" {
 			education = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -135,7 +136,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		education = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.MarriageStatus != nil {
 		if *param.MarriageStatus == "" {
 			marriageStatus = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -146,7 +147,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		marriageStatus = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.PartnerName != nil {
 		if *param.PartnerName == "" {
 			partnerName = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -157,7 +158,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		// Field not provided - set to NULL
 		partnerName = sql.NullString{String: "", Valid: false}
 	}
-	
+
 	if param.TelegramID != nil {
 		if *param.TelegramID == "" {
 			telegramID = sql.NullString{String: "", Valid: false} // Set to NULL
@@ -229,6 +230,13 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		responsePartnerName = &user.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", id).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	return &dto.User{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -242,6 +250,7 @@ func (u *user) Update(ctx context.Context, id uuid.UUID, param dto.UpdateUser) (
 		PartnerName:    responsePartnerName,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -273,6 +282,13 @@ func (u *user) Get(ctx context.Context, id uuid.UUID) (*dto.User, error) {
 		responsePartnerName = &user.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", id).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	return &dto.User{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -286,6 +302,7 @@ func (u *user) Get(ctx context.Context, id uuid.UUID) (*dto.User, error) {
 		PartnerName:    responsePartnerName,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -334,6 +351,13 @@ func (u *user) GetAll(ctx context.Context, page, pageSize int) ([]dto.User, int6
 			responsePartnerName = &user.PartnerName.String
 		}
 
+		var profileImageURL sql.NullString
+		_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", user.ID).Scan(&profileImageURL)
+		var responseProfileImage *string
+		if profileImageURL.Valid {
+			responseProfileImage = &profileImageURL.String
+		}
+
 		dtoUsers[i] = dto.User{
 			ID:             user.ID,
 			Name:           user.Name,
@@ -347,6 +371,7 @@ func (u *user) GetAll(ctx context.Context, page, pageSize int) ([]dto.User, int6
 			PartnerName:    responsePartnerName,
 			ChildrensName:  user.ChildrensName,
 			TelegramID:     responseTelegramID,
+			ProfileImage:   responseProfileImage,
 			CreatedAt:      user.CreatedAt,
 			UpdatedAt:      user.UpdatedAt,
 		}
@@ -401,6 +426,13 @@ func (u *user) GetUserByPhone(ctx context.Context, phoneNumber string) (*dto.Use
 		responsePartnerName = &user.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", user.ID).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	return &dto.User{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -414,6 +446,7 @@ func (u *user) GetUserByPhone(ctx context.Context, phoneNumber string) (*dto.Use
 		PartnerName:    responsePartnerName,
 		ChildrensName:  user.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      user.CreatedAt,
 		UpdatedAt:      user.UpdatedAt,
 	}, nil
@@ -514,6 +547,13 @@ func (u *user) ChangePassword(ctx context.Context, userID uuid.UUID, currentPass
 		responsePartnerName = &updatedUser.PartnerName.String
 	}
 
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", userID).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
 	u.log.Info(ctx, "Password changed successfully", zap.String("user-id", userID.String()))
 
 	return &dto.User{
@@ -529,6 +569,7 @@ func (u *user) ChangePassword(ctx context.Context, userID uuid.UUID, currentPass
 		PartnerName:    responsePartnerName,
 		ChildrensName:  updatedUser.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      updatedUser.CreatedAt,
 		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
@@ -560,15 +601,10 @@ func (u *user) GetByStatus(ctx context.Context, status string, page, pageSize in
 
 // UpdateStatus updates a user's status
 func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string) (*dto.User, error) {
-	// Convert string status to Status enum
-	var dbStatus db.Status
+	// Validate status value
 	switch status {
-	case "PENDING":
-		dbStatus = db.StatusPENDING
-	case "ACTIVE":
-		dbStatus = db.StatusACTIVE
-	case "INACTIVE":
-		dbStatus = db.StatusINACTIVE
+	case "PENDING", "ACTIVE", "INACTIVE":
+		// Valid status values
 	default:
 		err := errors.ErrInvalidUserInput.New("invalid status: must be PENDING, ACTIVE, or INACTIVE")
 		u.log.Error(ctx, "invalid status for update", zap.String("status", status), zap.String("user-id", userID.String()))
@@ -577,7 +613,7 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 
 	// Update user status in database
 	updatedUser, err := u.db.UpdateUserStatus(ctx, db.UpdateUserStatusParams{
-		Status: dbStatus,
+		Status: status,
 		ID:     userID,
 	})
 	if err != nil {
@@ -609,7 +645,18 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 		responsePartnerName = &updatedUser.PartnerName.String
 	}
 
-	u.log.Info(ctx, "user status updated successfully", 
+	if updatedUser.PartnerName.Valid {
+		responsePartnerName = &updatedUser.PartnerName.String
+	}
+
+	var profileImageURL sql.NullString
+	_ = u.db.Pool.QueryRow(ctx, "SELECT profile_image_url FROM users WHERE id = $1", userID).Scan(&profileImageURL)
+	var responseProfileImage *string
+	if profileImageURL.Valid {
+		responseProfileImage = &profileImageURL.String
+	}
+
+	u.log.Info(ctx, "user status updated successfully",
 		zap.String("user-id", userID.String()),
 		zap.String("new-status", status))
 
@@ -626,7 +673,27 @@ func (u *user) UpdateStatus(ctx context.Context, userID uuid.UUID, status string
 		PartnerName:    responsePartnerName,
 		ChildrensName:  updatedUser.ChildrensName,
 		TelegramID:     responseTelegramID,
+		ProfileImage:   responseProfileImage,
 		CreatedAt:      updatedUser.CreatedAt,
 		UpdatedAt:      updatedUser.UpdatedAt,
 	}, nil
+}
+
+func (u *user) UpdateProfileImage(ctx context.Context, userID uuid.UUID, imageURL string) error {
+	// Update only the profile_image_url; keep generated queries intact by using Pool directly
+	ct, err := u.db.Pool.Exec(ctx,
+		"UPDATE users SET profile_image_url = $1, updated_at = now() WHERE id = $2 AND deleted_at IS NULL",
+		imageURL, userID,
+	)
+	if err != nil {
+		err = errors.ErrWriteError.Wrap(err, "could not update profile image URL")
+		u.log.Error(ctx, "unable to update user profile image", zap.Error(err), zap.String("user-id", userID.String()))
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		err := errors.ErrNoRecordFound.New("user not found")
+		u.log.Info(ctx, "no user updated for profile image", zap.String("user-id", userID.String()))
+		return err
+	}
+	return nil
 }

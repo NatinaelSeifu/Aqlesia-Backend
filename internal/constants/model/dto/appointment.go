@@ -48,10 +48,10 @@ type CreateAppointmentRequest struct {
 
 func (c CreateAppointmentRequest) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.AppointmentDate, 
+		validation.Field(&c.AppointmentDate,
 			validation.Required.Error("appointment date is required"),
 			validation.By(c.validateAppointmentDate)),
-		validation.Field(&c.Notes, 
+		validation.Field(&c.Notes,
 			validation.When(c.Notes != nil, validation.Length(0, 500).Error("notes must be no more than 500 characters"))),
 	)
 }
@@ -62,32 +62,32 @@ func (c CreateAppointmentRequest) validateAppointmentDate(value interface{}) err
 	if !ok {
 		return validation.NewError("validation_date_invalid_type", "appointment date must be a string")
 	}
-	
+
 	// Parse the date in YYYY-MM-DD format
 	appointmentDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return validation.NewError("validation_date_invalid_format", "appointment date must be in YYYY-MM-DD format")
 	}
-	
+
 	// Check if the date is in the past
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	if appointmentDate.Before(today) {
 		return validation.NewError("validation_date_in_past", "appointment date cannot be in the past")
 	}
-	
+
 	// Check if the date is too far in the future (more than 1 month)
 	maxDate := today.AddDate(0, 1, 0)
 	if appointmentDate.After(maxDate) {
 		return validation.NewError("validation_date_too_far", "appointment date cannot be more than 1 month in the future")
 	}
-	
+
 	// Check if it's a valid appointment day (Monday, Wednesday, Friday)
 	weekday := appointmentDate.Weekday()
 	if weekday != time.Monday && weekday != time.Wednesday && weekday != time.Friday {
 		return validation.NewError("validation_date_invalid_day", "appointments are only available on Monday, Wednesday, and Friday")
 	}
-	
+
 	return nil
 }
 
@@ -106,9 +106,9 @@ type UpdateAppointmentRequest struct {
 
 func (u UpdateAppointmentRequest) Validate() error {
 	return validation.ValidateStruct(&u,
-		validation.Field(&u.AppointmentDate, 
+		validation.Field(&u.AppointmentDate,
 			validation.When(u.AppointmentDate != nil, validation.By(u.validateAppointmentDate))),
-		validation.Field(&u.Notes, 
+		validation.Field(&u.Notes,
 			validation.When(u.Notes != nil, validation.Length(0, 500).Error("notes must be no more than 500 characters"))),
 	)
 }
@@ -119,32 +119,32 @@ func (u UpdateAppointmentRequest) validateAppointmentDate(value interface{}) err
 	if !ok {
 		return validation.NewError("validation_date_invalid_type", "appointment date must be a string")
 	}
-	
+
 	// Parse the date in YYYY-MM-DD format
 	appointmentDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return validation.NewError("validation_date_invalid_format", "appointment date must be in YYYY-MM-DD format")
 	}
-	
+
 	// Check if the date is in the past
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	if appointmentDate.Before(today) {
 		return validation.NewError("validation_date_in_past", "appointment date cannot be in the past")
 	}
-	
+
 	// Check if the date is too far in the future (more than 1 month)
 	maxDate := today.AddDate(0, 1, 0)
 	if appointmentDate.After(maxDate) {
 		return validation.NewError("validation_date_too_far", "appointment date cannot be more than 1 month in the future")
 	}
-	
+
 	// Check if it's a valid appointment day (Monday, Wednesday, Friday)
 	weekday := appointmentDate.Weekday()
 	if weekday != time.Monday && weekday != time.Wednesday && weekday != time.Friday {
 		return validation.NewError("validation_date_invalid_day", "appointments are only available on Monday, Wednesday, and Friday")
 	}
-	
+
 	return nil
 }
 
@@ -168,7 +168,7 @@ type MarkAppointmentCompletedRequest struct {
 
 func (m MarkAppointmentCompletedRequest) Validate() error {
 	return validation.ValidateStruct(&m,
-		validation.Field(&m.Notes, 
+		validation.Field(&m.Notes,
 			validation.When(m.Notes != nil, validation.Length(0, 500).Error("notes must be no more than 500 characters"))),
 	)
 }

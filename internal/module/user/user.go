@@ -180,3 +180,13 @@ func (u *user) UpdateStatus(ctx context.Context, id string, status string) (*dto
 
 	return u.userPersistent.UpdateStatus(ctx, uuidID, status)
 }
+
+func (u *user) UpdateProfileImage(ctx context.Context, id string, imageURL string) error {
+	uuidID, err := uuid.Parse(id)
+	if err != nil {
+		err := errors.ErrInvalidUserInput.Wrap(err, "invalid user id")
+		u.log.Error(ctx, "parsing user id failed for profile image update", zap.Error(err), zap.String("user-id", id))
+		return err
+	}
+	return u.userPersistent.UpdateProfileImage(ctx, uuidID, imageURL)
+}

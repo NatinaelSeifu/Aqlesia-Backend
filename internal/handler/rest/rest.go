@@ -8,6 +8,7 @@ type User interface {
 	GetUsers(ctx *gin.Context)
 	UpdateUserStatus(ctx *gin.Context)
 	DeleteUser(ctx *gin.Context)
+	UploadAvatar(ctx *gin.Context)
 }
 
 type Auth interface {

@@ -6,55 +6,10 @@ package db
 
 import (
 	"database/sql"
-	"database/sql/driver"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-type Status string
-
-const (
-	StatusPENDING  Status = "PENDING"
-	StatusACTIVE   Status = "ACTIVE"
-	StatusINACTIVE Status = "INACTIVE"
-)
-
-func (e *Status) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = Status(s)
-	case string:
-		*e = Status(s)
-	default:
-		return fmt.Errorf("unsupported scan type for Status: %T", src)
-	}
-	return nil
-}
-
-type NullStatus struct {
-	Status Status
-	Valid  bool // Valid is true if Status is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullStatus) Scan(value interface{}) error {
-	if value == nil {
-		ns.Status, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.Status.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullStatus) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.Status), nil
-}
 
 type Appointment struct {
 	ID              uuid.UUID
@@ -90,6 +45,17 @@ type Communion struct {
 	DeletedAt        sql.NullTime
 }
 
+type PasswordResetOtp struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	OtpHash   string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	ExpiresAt time.Time
+	Used      bool
+	Attempts  int32
+}
+
 type PasswordResetToken struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
@@ -113,20 +79,20 @@ type Question struct {
 
 type User struct {
 	ID               uuid.UUID
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	DeletedAt        sql.NullTime
 	Name             string
 	Lastname         string
 	PhoneNumber      string
 	Password         string
 	TelegramID       sql.NullString
 	Role             string
+	Status           string
 	JobTitle         sql.NullString
 	Education        sql.NullString
 	MarriageStatus   sql.NullString
-	ChildrensName    []string
-	Status           Status
 	PartnerName      sql.NullString
+	ChildrensName    []string
 	TelegramVerified bool
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        sql.NullTime
 }

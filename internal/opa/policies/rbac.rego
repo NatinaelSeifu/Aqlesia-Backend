@@ -49,6 +49,7 @@ roles := {
             "appointments:cancel",
             "appointments:stats",
             "appointments:list_available",
+            "appointments:create",
             "available_dates:read",
             "available_dates:list",
             "available_dates:create",

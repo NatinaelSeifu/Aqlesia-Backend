@@ -214,3 +214,68 @@ func (u *user) CleanupExpiredResetTokens(ctx context.Context) error {
 	u.log.Debug(ctx, "Cleaned up expired reset tokens")
 	return nil
 }
+
+// CreatePasswordResetOTP creates a new password reset OTP
+func (u *user) CreatePasswordResetOTP(ctx context.Context, userID uuid.UUID, otpHash string, expiresAt time.Time) (*dto.PasswordResetOTP, error) {
+	otp, err := u.db.CreatePasswordResetOTP(ctx, db.CreatePasswordResetOTPParams{
+		UserID:    userID,
+		OtpHash:   otpHash,
+		ExpiresAt: expiresAt,
+	})
+	if err != nil {
+		err = errors.ErrWriteError.Wrap(err, "could not create password reset OTP")
+		u.log.Error(ctx, "unable to create password reset OTP", zap.Error(err), zap.String("user_id", userID.String()))
+		return nil, err
+	}
+
+	return &dto.PasswordResetOTP{
+		ID:        otp.ID,
+		UserID:    otp.UserID,
+		OTPHash:   otp.OtpHash,
+		CreatedAt: otp.CreatedAt,
+		ExpiresAt: otp.ExpiresAt,
+		Used:      otp.Used,
+		Attempts:  int(otp.Attempts),
+	}, nil
+}
+
+// GetValidPasswordResetOTP retrieves a valid password reset OTP
+func (u *user) GetValidPasswordResetOTP(ctx context.Context, userID uuid.UUID, otpHash string) (*dto.PasswordResetOTP, error) {
+	otp, err := u.db.GetValidPasswordResetOTP(ctx, db.GetValidPasswordResetOTPParams{
+		UserID:  userID,
+		OtpHash: otpHash,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err := errors.ErrNoRecordFound.Wrap(err, "OTP not found or expired")
+			u.log.Info(ctx, "Password reset OTP not found or expired", zap.String("user_id", userID.String()))
+			return nil, err
+		}
+		err = errors.ErrReadError.Wrap(err, "could not read password reset OTP")
+		u.log.Error(ctx, "unable to get password reset OTP", zap.Error(err))
+		return nil, err
+	}
+
+	return &dto.PasswordResetOTP{
+		ID:        otp.ID,
+		UserID:    otp.UserID,
+		OTPHash:   otp.OtpHash,
+		CreatedAt: otp.CreatedAt,
+		ExpiresAt: otp.ExpiresAt,
+		Used:      otp.Used,
+		Attempts:  int(otp.Attempts),
+	}, nil
+}
+
+// MarkPasswordResetOTPUsed marks a password reset OTP as used
+func (u *user) MarkPasswordResetOTPUsed(ctx context.Context, otpID uuid.UUID) error {
+	err := u.db.MarkPasswordResetOTPUsed(ctx, otpID)
+	if err != nil {
+		err = errors.ErrWriteError.Wrap(err, "could not mark OTP as used")
+		u.log.Error(ctx, "unable to mark password reset OTP as used", zap.Error(err), zap.String("otp_id", otpID.String()))
+		return err
+	}
+
+	u.log.Info(ctx, "Password reset OTP marked as used", zap.String("otp_id", otpID.String()))
+	return nil
+}
