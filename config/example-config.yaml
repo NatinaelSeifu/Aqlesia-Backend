@@ -1,0 +1,38 @@
+debug: false
+dev: false
+logger:
+  level: -1
+database:
+  url: postgresql://root@localhost:25267/defaultdb?sslmode=disable
+migration:
+  active: false
+  path: internal/constants/query/schemas
+server:
+  port: 8000
+  timeout: 30s
+jwt:
+  secret: "your-super-secret-jwt-key"
+telegram:
+  bot_token: "73714472:AAHdEJtkqIDccjW-"
+  app_base_url: "http://localhost:3000/reset-password"
+  token_pepper: "your-super-secret-reset-token-pepper"
+  link_code_ttl: 300s # 5 minutes
+cors:
+  origin:
+    - http://localhost:3000
+  allow_credentials: true
+  headers:
+    - Location
+    - Content-Type
+    - Options
+    - Authorization
+    - X-Requested-With
+    - Access-Control-Allow-Headers
+    - Company-ID
+spaces:
+  endpoint: https://fra1.digitaloceanspaces.com
+  region: fra1
+  bucket: bucket-name
+  access_key: access-key
+  secret_key: secret-key
+  cdn_base_url: "cdn-base-url"
